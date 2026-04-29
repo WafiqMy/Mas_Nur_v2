@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class InfaqRekening extends Model
 {
@@ -34,7 +35,7 @@ class InfaqRekening extends Model
     /**
      * Scope: Get active accounts only
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -42,7 +43,7 @@ class InfaqRekening extends Model
     /**
      * Scope: Get by bank name
      */
-    public function scopeByBank($query, $bank)
+    public function scopeByBank(Builder $query, string $bank): Builder
     {
         return $query->where('nama_bank', $bank);
     }

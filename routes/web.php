@@ -118,7 +118,8 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/rekening', [InfaqRekeningController::class, 'store'])->name('rekening.store');
         Route::put('/rekening/{rekening}', [InfaqRekeningController::class, 'update'])->name('rekening.update');
         Route::delete('/rekening/{rekening}', [InfaqRekeningController::class, 'destroy'])->name('rekening.destroy');
-        Route::post('/rekening/{rekening}/toggle-active', [InfaqRekeningController::class, 'toggleActive'])->name('rekening.toggle-active');
+        Route::patch('/rekening/{rekening}/toggle-active', [InfaqRekeningController::class, 'toggleActive'])->name('rekening.toggleActive');
+        Route::patch('/rekening/{rekening}/remove-qris', [InfaqRekeningController::class, 'removeQris'])->name('rekening.removeQris');
     });
 });
 

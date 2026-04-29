@@ -424,6 +424,7 @@
         padding-bottom: 70px;
     }
 
+    /* Mobile Responsive Styles */
     @media (max-width: 576px) {
         .infaq-cta-bar {
             padding: 0.75rem 0.5rem;
@@ -449,8 +450,13 @@
 
 @section('content')
 
+{{-- Trik menyimpan asset URL ke variabel PHP agar VS Code tidak error --}}
+@php
+    $heroBg = asset('img/ms3.png');
+@endphp
+
 {{-- HERO SECTION --}}
-<section class="infaq-hero" style="background-image: url('{{ asset('img/ms3.png') }}');">
+<section class="infaq-hero" style="background-image: url('{{ $heroBg }}');">
     <div class="infaq-hero-content" data-aos="fade-up">
         <h1>Infaq & Shadaqah</h1>
         <p>Tunaikan Infaq Anda, Alirkan Kebaikan & Berkah</p>

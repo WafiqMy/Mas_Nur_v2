@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class InfaqDana extends Model
 {
@@ -31,7 +32,7 @@ class InfaqDana extends Model
     /**
      * Scope: Get latest entries
      */
-    public function scopeLatest10($query)
+    public function scopeLatest10(Builder $query): Builder
     {
         return $query->orderBy('tanggal', 'desc')->limit(10);
     }
@@ -39,7 +40,7 @@ class InfaqDana extends Model
     /**
      * Scope: Get entries for current month
      */
-    public function scopeCurrentMonth($query)
+    public function scopeCurrentMonth(Builder $query): Builder
     {
         return $query->whereYear('tanggal', now()->year)
                      ->whereMonth('tanggal', now()->month);
@@ -48,9 +49,9 @@ class InfaqDana extends Model
     /**
      * Calculate total for a given month
      */
-    public static function getTotalByMonth($month, $year)
+    public static function getTotalByMonth(int $month, int $year): float
     {
-        return self::whereYear('tanggal', $year)
+        return (float) self::whereYear('tanggal', $year)
                    ->whereMonth('tanggal', $month)
                    ->sum('jumlah');
     }
@@ -58,8 +59,8 @@ class InfaqDana extends Model
     /**
      * Calculate total for all time
      */
-    public static function getTotalAll()
+    public static function getTotalAll(): float
     {
-        return self::sum('jumlah');
+        return (float) self::sum('jumlah');
     }
 }

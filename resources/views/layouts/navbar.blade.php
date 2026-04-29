@@ -104,6 +104,8 @@
                                     <i class="bi bi-clipboard-check me-2 text-muted"></i>Permintaan Sewa</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.infaq.dana.index') }}">
                                     <i class="bi bi-cash-coin me-2 text-muted"></i>Kelola Infaq</a></li>
+                                <li><a class="dropdown-item rounded py-2" href="{{ route('admin.infaq.rekening.index') }}">
+                                    <i class="bi bi-bank2 me-2 text-muted"></i>Kelola Rekening & QRIS</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.profil-masjid.edit') }}">
                                     <i class="bi bi-building me-2 text-muted"></i>Edit Profil Masjid</a></li>
                                 <li><hr class="dropdown-divider my-1"></li>
