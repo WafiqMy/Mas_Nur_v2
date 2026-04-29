@@ -53,14 +53,12 @@
                 </li>
 
                 <li class="nav-item">
-<<<<<<< HEAD
+
                     <a class="nav-link {{ request()->routeIs('infaq.*') ? 'active fw-semibold' : '' }}"
                        href="{{ route('infaq.index') }}">Infaq</a>
                 </li>
 
                 <li class="nav-item">
-=======
->>>>>>> 6504e41481688877f402de90ce493d67d96df0fa
                     <a class="nav-link {{ request()->routeIs('reservasi.*') ? 'active fw-semibold' : '' }}"
                        href="{{ route('reservasi.index') }}">Sewa Fasilitas</a>
                 </li>
@@ -105,13 +103,10 @@
                                     <i class="bi bi-box-seam me-2 text-muted"></i>Kelola Barang</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.reservasi.permintaan') }}">
                                     <i class="bi bi-clipboard-check me-2 text-muted"></i>Permintaan Sewa</a></li>
-<<<<<<< HEAD
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.infaq.dana.index') }}">
                                     <i class="bi bi-cash-coin me-2 text-muted"></i>Kelola Infaq</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.infaq.rekening.index') }}">
                                     <i class="bi bi-bank2 me-2 text-muted"></i>Kelola Rekening & QRIS</a></li>
-=======
->>>>>>> 6504e41481688877f402de90ce493d67d96df0fa
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.profil-masjid.edit') }}">
                                     <i class="bi bi-building me-2 text-muted"></i>Edit Profil Masjid</a></li>
                                 <li><hr class="dropdown-divider my-1"></li>
