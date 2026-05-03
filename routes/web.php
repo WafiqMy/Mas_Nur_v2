@@ -97,7 +97,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     // Permintaan Reservasi
     Route::get('/reservasi/permintaan', [ReservasiController::class, 'permintaan'])->name('reservasi.permintaan');
     Route::get('/reservasi/permintaan/{id}', [ReservasiController::class, 'detailPermintaan'])->name('reservasi.detail-permintaan');
-    Route::post('/reservasi/permintaan/{id}/status', [ReservasiController::class, 'updateStatus'])->name('reservasi.update-status');
+    Route::put('/reservasi/permintaan/{id}', [ReservasiController::class, 'updateStatus'])->name('reservasi.update-status');
 
     // Profil Masjid
     Route::get('/profil-masjid', [ProfilMasjidController::class, 'edit'])->name('profil-masjid.edit');

@@ -12,6 +12,7 @@
     .notif-title { font-weight: 700; font-size: 1.05rem; color: #333; margin-bottom: 5px; }
     .notif-time { font-size: 0.8rem; color: #888; margin-bottom: 8px; display: block; }
     .notif-msg { font-size: 0.9rem; color: #555; line-height: 1.6; }
+    .notif-badge { font-size: 0.65rem; padding: 0.375rem 0.75rem; }
 </style>
 @endpush
 
@@ -26,20 +27,29 @@
         @php
             $statusBadge = $n['status_badge'] ?? 'Menunggu';
             $link = $n['link'] ?? '#';
-            // Pastikan link adalah URL absolut atau route yang valid
-            if ($link && !str_starts_with($link, 'http') && !str_starts_with($link, '/')) {
+            
+            // Validasi link lebih ketat
+            if (!$link || $link === '#') {
+                $link = '#';
+            } elseif (!str_starts_with($link, 'http') && !str_starts_with($link, '/')) {
+                // Jika bukan URL absolut atau path relatif, tambahkan /
                 $link = '/' . $link;
             }
         @endphp
         <a href="{{ $link }}" class="notif-card status-{{ $statusBadge }}">
-            <div class="d-flex justify-content-between align-items-start">
-                <h5 class="notif-title">{{ $n['judul'] ?? '' }}</h5>
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <h5 class="notif-title mb-0">{{ $n['judul'] ?? 'Notifikasi' }}</h5>
                 @if(!empty($n['is_new']))
-                <span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">BARU</span>
+                <span class="badge bg-danger rounded-pill notif-badge">BARU</span>
                 @endif
             </div>
             <span class="notif-time">
-                <i class="bi bi-clock me-1"></i>{{ $n['waktu'] ?? '' }}
+                <i class="bi bi-clock me-1"></i>
+                @if(!empty($n['waktu']))
+                    {{ $n['waktu'] }}
+                @else
+                    {{ $n['created_at'] ?? 'Baru saja' }}
+                @endif
             </span>
             <div class="notif-msg">{!! $n['pesan'] ?? '' !!}</div>
         </a>
