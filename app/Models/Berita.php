@@ -33,3 +33,4 @@ class Berita extends Model
         return $query->orderBy('tanggal_berita', 'desc')->limit(3);
     }
 }
+//jeki
