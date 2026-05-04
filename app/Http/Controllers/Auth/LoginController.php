@@ -37,14 +37,36 @@ class LoginController extends Controller
         $response = $this->api->login($request->username, $request->password);
 
         if (isset($response['status']) && $response['status'] === 'success') {
+            // Ambil data dari response API
+            $data = $response['data'] ?? [];
+
+            // Cek berbagai kemungkinan key untuk role dari API
+            $role = $data['role']      ??
+                    $data['Role']      ??
+                    $data['tipe']      ??
+                    $data['user_role'] ??
+                    $data['level']     ??
+                    'user';
+
+            // Normalisasi role ke lowercase
+            $role = strtolower(trim((string) $role));
+
             // Simpan data user ke session
             Session::put('user', [
                 'username' => $request->username,
-                'nama'     => $response['data']['nama'] ?? $request->username,
-                'role'     => $response['data']['role'] ?? 'user',
+                'nama'     => $data['nama']      ?? $data['name']     ?? $data['nama_lengkap'] ?? $request->username,
+                'email'    => $data['email']     ?? '',
+                'role'     => $role,
+                'foto'     => $data['foto']      ?? $data['gambar']   ?? '',
             ]);
 
             $request->session()->regenerate();
+
+            // Redirect admin ke halaman admin, user biasa ke home
+            if ($role === 'admin') {
+                return redirect()->route('admin.berita.index')
+                    ->with('success', 'Selamat datang, Admin!');
+            }
 
             return redirect()->intended(route('home'));
         }

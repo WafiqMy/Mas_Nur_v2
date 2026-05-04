@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfilMasjidController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileUserController;
 use App\Http\Controllers\InfaqController;
+use App\Http\Controllers\FoodCourtController;
 use App\Http\Controllers\Admin\InfaqDanaController;
 use App\Http\Controllers\Admin\InfaqRekeningController;
 use App\Http\Controllers\Auth\LoginController;
@@ -33,6 +34,8 @@ Route::get('/reservasi', [PersewaanController::class, 'index'])->name('reservasi
 Route::get('/reservasi/barang/{id}', [PersewaanController::class, 'show'])->name('reservasi.barang.show');
 
 Route::get('/infaq', [InfaqController::class, 'index'])->name('infaq.index');
+
+Route::get('/food-court', [FoodCourtController::class, 'index'])->name('food-court.index');
 
 // ===================== AUTH =====================
 
@@ -105,6 +108,12 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/profil-masjid/struktur', [ProfilMasjidController::class, 'editStruktur'])->name('profil-masjid.edit-struktur');
     Route::put('/profil-masjid/struktur', [ProfilMasjidController::class, 'updateStruktur'])->name('profil-masjid.update-struktur');
 
+    // Food Court
+    Route::get('/food-court', [FoodCourtController::class, 'adminIndex'])->name('food-court.index');
+    Route::post('/food-court', [FoodCourtController::class, 'store'])->name('food-court.store');
+    Route::put('/food-court/{foodCourt}', [FoodCourtController::class, 'update'])->name('food-court.update');
+    Route::delete('/food-court/{foodCourt}', [FoodCourtController::class, 'destroy'])->name('food-court.destroy');
+
     // Infaq
     Route::prefix('infaq')->name('infaq.')->group(function () {
         // Infaq Dana
@@ -127,4 +136,15 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('api')->name('api.')->group(function () {
     Route::get('/kalender-reservasi/{id}', [ReservasiController::class, 'kalender'])->name('kalender-reservasi');
+
+    // Food Court API (publik - GET)
+    Route::get('/food-court', [\App\Http\Controllers\Api\FoodCourtApiController::class, 'index'])->name('food-court.index');
+    Route::get('/food-court/{id}', [\App\Http\Controllers\Api\FoodCourtApiController::class, 'show'])->name('food-court.show');
+
+    // Food Court API (admin - POST/PUT/DELETE, dilindungi middleware admin)
+    Route::middleware('admin')->group(function () {
+        Route::post('/food-court', [\App\Http\Controllers\Api\FoodCourtApiController::class, 'store'])->name('food-court.store');
+        Route::post('/food-court/{id}', [\App\Http\Controllers\Api\FoodCourtApiController::class, 'update'])->name('food-court.update');
+        Route::delete('/food-court/{id}', [\App\Http\Controllers\Api\FoodCourtApiController::class, 'destroy'])->name('food-court.destroy');
+    });
 });

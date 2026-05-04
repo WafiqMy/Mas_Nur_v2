@@ -32,6 +32,19 @@
                 <p class="text-muted fs-5 mt-3" style="max-width: 700px;">
                     Masjid Nurul Huda menyediakan berbagai fasilitas yang dapat disewa oleh jamaah dan masyarakat umum.
                 </p>
+                @if(session('user') && strtolower(session('user')['role'] ?? '') === 'admin')
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                    <a href="{{ route('admin.reservasi.index') }}" class="btn btn-warning fw-semibold">
+                        <i class="bi bi-box-seam me-1"></i>Kelola Barang
+                    </a>
+                    <a href="{{ route('admin.reservasi.create') }}" class="btn btn-success fw-semibold">
+                        <i class="bi bi-plus-circle me-1"></i>Tambah Barang
+                    </a>
+                    <a href="{{ route('admin.reservasi.permintaan') }}" class="btn btn-info fw-semibold text-white">
+                        <i class="bi bi-clipboard-check me-1"></i>Permintaan Sewa
+                    </a>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -66,11 +79,26 @@
                                 Rp {{ number_format((float)($b['harga'] ?? 0), 0, ',', '.') }}
                             </span>
                         </div>
-                        <div class="mt-auto d-grid">
+                        <div class="mt-auto d-grid gap-2">
                             <a href="{{ route('reservasi.barang.show', $idBarang) }}"
                                class="btn btn-sm btn-sewa text-white">
                                 Detail & Sewa
                             </a>
+                            @if(session('user') && strtolower(session('user')['role'] ?? '') === 'admin')
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('admin.reservasi.edit', $idBarang) }}"
+                                   class="btn btn-sm btn-outline-warning flex-fill">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                                <form action="{{ route('admin.reservasi.destroy', $idBarang) }}" method="POST"
+                                      onsubmit="return confirm('Hapus barang ini?')" class="flex-fill">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                        <i class="bi bi-trash me-1"></i>Hapus
+                                    </button>
+                                </form>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>

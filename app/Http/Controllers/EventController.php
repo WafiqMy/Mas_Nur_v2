@@ -171,7 +171,7 @@ class EventController extends Controller
     private function authorizeAdmin(): void
     {
         $user = Session::get('user');
-        if (!$user || ($user['role'] ?? '') !== 'admin') {
+        if (!$user || strtolower(trim((string) ($user['role'] ?? ''))) !== 'admin') {
             abort(403, 'Akses ditolak. Hanya admin yang diizinkan.');
         }
     }

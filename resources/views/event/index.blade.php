@@ -5,7 +5,7 @@
 @section('content')
 @php
     $sessionUser = session('user');
-    $isAdmin = ($sessionUser['role'] ?? '') === 'admin';
+    $isAdmin = strtolower(trim((string) ($sessionUser['role'] ?? ''))) === 'admin';
     $BASE_IMG = config('app.api_base_url');
 @endphp
 

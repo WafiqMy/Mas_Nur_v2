@@ -1,7 +1,7 @@
 @php
     $sessionUser = session('user');
     $isLoggedIn  = !empty($sessionUser);
-    $isAdmin     = $isLoggedIn && ($sessionUser['role'] ?? '') === 'admin';
+    $isAdmin     = $isLoggedIn && strtolower(trim((string) ($sessionUser['role'] ?? ''))) === 'admin';
     $namaUser    = $sessionUser['nama'] ?? '';
     $usernameUser = $sessionUser['username'] ?? '';
 
@@ -63,6 +63,11 @@
                        href="{{ route('reservasi.index') }}">Sewa Fasilitas</a>
                 </li>
 
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('food-court.*') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('food-court.index') }}">Food Court</a>
+                </li>
+
                 @if(!$isLoggedIn)
                     <li class="nav-item">
                         <a href="{{ route('login') }}" class="btn btn-primary btn-sm px-3 fw-semibold">
@@ -107,6 +112,8 @@
                                     <i class="bi bi-cash-coin me-2 text-muted"></i>Kelola Infaq</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.infaq.rekening.index') }}">
                                     <i class="bi bi-bank2 me-2 text-muted"></i>Kelola Rekening & QRIS</a></li>
+                                <li><a class="dropdown-item rounded py-2" href="{{ route('admin.food-court.index') }}">
+                                    <i class="bi bi-shop me-2 text-muted"></i>Kelola Food Court</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.profil-masjid.edit') }}">
                                     <i class="bi bi-building me-2 text-muted"></i>Edit Profil Masjid</a></li>
                                 <li><hr class="dropdown-divider my-1"></li>
