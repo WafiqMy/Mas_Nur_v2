@@ -26,7 +26,7 @@
     $jumlah     = (int)($barang['jumlah'] ?? 1);
 @endphp
 
-<div class="container py-5" style="max-width: 1000px;">
+<div class="container" style="max-width: 1000px; padding-top: 140px; padding-bottom: 3rem;">
 
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">

@@ -62,6 +62,8 @@ Route::middleware('auth.user')->group(function () {
 
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::get('/notifikasi/count', [NotifikasiController::class, 'count'])->name('notifikasi.count');
+    Route::post('/notifikasi/{id}/mark-as-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-as-read');
+    Route::post('/notifikasi/mark-all-as-read', [NotifikasiController::class, 'markAllAsRead'])->name('notifikasi.mark-all-as-read');
 
     Route::get('/profil', [ProfileUserController::class, 'show'])->name('profil-user.show');
     Route::post('/profil/update', [ProfileUserController::class, 'update'])->name('profil-user.update');

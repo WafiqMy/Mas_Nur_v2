@@ -9,7 +9,7 @@
     $BASE_IMG = config('app.api_base_url');
 @endphp
 
-<div class="bg-light py-4 border-bottom mb-4">
+<div class="bg-light border-bottom mb-4" style="padding-top: 140px; padding-bottom: 2rem;">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
             <div>

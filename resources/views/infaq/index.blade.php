@@ -16,6 +16,7 @@
         justify-content: center;
         text-align: center;
         overflow: hidden;
+        padding-top: 120px;
     }
 
     .infaq-hero::before {
@@ -460,9 +461,6 @@
     <div class="infaq-hero-content" data-aos="fade-up">
         <h1>Infaq & Shadaqah</h1>
         <p>Tunaikan Infaq Anda, Alirkan Kebaikan & Berkah</p>
-        <button class="btn-infaq-cta" onclick="document.getElementById('rekening-section').scrollIntoView({behavior: 'smooth'});">
-            <i class="bi bi-heart-fill me-2"></i>Infaq Sekarang
-        </button>
     </div>
 </section>
 

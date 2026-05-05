@@ -22,7 +22,7 @@
     $BASE_IMG = config('app.api_base_url');
 @endphp
 
-<div class="page-header">
+<div class="page-header" style="padding-top: 140px;">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 offset-lg-1">

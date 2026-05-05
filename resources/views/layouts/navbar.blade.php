@@ -9,8 +9,85 @@
     $fotoUrl = 'https://ui-avatars.com/api/?name=' . urlencode($namaUser) . '&background=2563eb&color=fff&size=64';
 @endphp
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top border-bottom shadow-sm" style="z-index: 1030;">
-    <div class="container">
+<style>
+    /* 1. FLOATING PILL NAVBAR - UKURAN ABSOLUT */
+    .navbar-floating {
+        position: fixed !important;
+        top: 25px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 90vw !important;
+        max-width: 1100px !important;
+        margin: 0 !important;
+        border-radius: 50px !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(12px) !important;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0,0,0,0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        padding: 0.7rem 1.8rem !important;
+        z-index: 1050 !important;
+        transition: all 0.3s ease;
+    }
+
+    /* 2. POP-UP SUPER MINIMALIST & TRANSPARAN */
+    .nav-popup {
+        position: absolute;
+        top: calc(100% + 15px);
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: rgba(31, 41, 55, 0.85) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 9999;
+        white-space: nowrap;
+    }
+
+    /* Panah Pop-up minimalis */
+    .nav-popup-arrow {
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 10px;
+        height: 10px;
+        background: rgba(31, 41, 55, 0.85);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sembunyikan elemen berlebih, sisakan judul saja */
+    .nav-popup-icon, .nav-popup-desc { display: none !important; }
+    .nav-popup-title {
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        letter-spacing: 0.5px;
+    }
+
+    /* Hover Trigger */
+    .nav-item:hover .nav-popup {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* Adjust body padding untuk floating navbar */
+    body {
+        padding-top: 0px !important;
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light navbar-floating">
 
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
             <img src="{{ asset('img/logo_masjid.png') }}" alt="Logo" height="38"
@@ -138,7 +215,6 @@
 
             </ul>
         </div>
-    </div>
 </nav>
 
 @if($isLoggedIn)

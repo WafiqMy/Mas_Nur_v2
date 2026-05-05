@@ -19,7 +19,7 @@
     }
 @endphp
 
-<div class="bg-primary text-white py-4 mb-5">
+<div class="bg-primary text-white mb-5" style="padding-top: 140px; padding-bottom: 40px;">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
             <div>

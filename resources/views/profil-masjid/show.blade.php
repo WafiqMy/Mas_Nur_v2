@@ -24,7 +24,7 @@
 @endphp
 
 {{-- Hero --}}
-<div class="bg-primary text-white py-5">
+<div class="bg-primary text-white" style="padding-top: 140px; padding-bottom: 50px;">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8" data-aos="fade-right">

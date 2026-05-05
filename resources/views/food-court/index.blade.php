@@ -5,9 +5,10 @@
 @push('styles')
 <style>
     /* ===== HERO ===== */
-    .fc-hero {
+   .fc-hero {
         background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-        padding: 5rem 0 4rem;
+        /* UBAH PADDING INI: 9rem di atas (jarak untuk navbar), 0 kiri-kanan, 4rem bawah */
+        padding: 9rem 0 4rem;
         text-align: center;
         color: white;
     }
