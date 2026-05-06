@@ -21,7 +21,7 @@
     }
 @endphp
 
-<div class="container py-5" style="max-width: 800px;">
+<div class="container" style="max-width: 800px; padding-top: 140px; padding-bottom: 3rem;">
 
     <div class="d-flex align-items-center gap-3 mb-4">
         <a href="{{ route('event.index') }}" class="btn btn-outline-secondary btn-sm">
