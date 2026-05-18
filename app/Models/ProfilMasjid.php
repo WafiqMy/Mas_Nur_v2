@@ -18,9 +18,38 @@ class ProfilMasjid extends Model
         'deskripsi_remas',
         'alamat',
         'telepon',
+        'whatsapp',
         'email',
         'website',
     ];
+
+    /**
+     * Mengembalikan URL WhatsApp yang siap dipakai di href.
+     * Ambil dari kolom whatsapp di DB, fallback ke config masjid.
+     */
+    public function getWhatsappUrlAttribute(): string
+    {
+        $nomor = $this->whatsapp ?? config('masjid.sosial.whatsapp');
+
+        if (!$nomor) {
+            return '#';
+        }
+
+        // Jika sudah berupa URL lengkap (https://wa.me/...)
+        if (str_starts_with($nomor, 'http')) {
+            return $nomor;
+        }
+
+        // Bersihkan karakter non-digit kecuali +
+        $nomor = preg_replace('/[^0-9]/', '', $nomor);
+
+        // Ubah awalan 0 jadi 62
+        if (str_starts_with($nomor, '0')) {
+            $nomor = '62' . substr($nomor, 1);
+        }
+
+        return 'https://wa.me/' . $nomor;
+    }
 
     public function getGambarSampulUrlAttribute(): string
     {

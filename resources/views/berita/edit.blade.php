@@ -8,6 +8,8 @@
     $foto = $berita['foto_berita'] ?? '';
     if ($foto && !str_starts_with($foto, 'http')) {
         $foto = $BASE_IMG . '/uploads/berita/' . $foto;
+    } elseif ($foto && str_starts_with($foto, 'http') && !str_contains($foto, '/uploads/')) {
+        $foto = $BASE_IMG . '/uploads/berita/' . basename($foto);
     }
     $idBerita = $berita['id_berita'] ?? 0;
 @endphp

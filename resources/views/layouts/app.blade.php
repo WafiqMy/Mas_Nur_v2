@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+      /* Flatpickr custom style */
+      .flatpickr-input { cursor: pointer !important; background: white !important; }
+      .flatpickr-calendar { font-family: 'Poppins', sans-serif; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+      .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #2563eb; border-color: #2563eb; }
+      .flatpickr-day:hover { background: #dbeafe; }
+      .flatpickr-months .flatpickr-month { background: #2563eb; color: white; border-radius: 12px 12px 0 0; }
+      .flatpickr-current-month .flatpickr-monthDropdown-months { background: #2563eb; color: white; }
+      .flatpickr-current-month input.cur-year { color: white; }
+      .flatpickr-weekday { color: #2563eb; font-weight: 600; }
+      .numInputWrapper span { border-color: rgba(255,255,255,0.3); }
+      .numInputWrapper span:hover { background: rgba(255,255,255,0.2); }
+      .flatpickr-prev-month svg, .flatpickr-next-month svg { fill: white; }
+      /* Label tanggal helper */
+      .date-helper { font-size: 0.78rem; color: #6b7280; margin-top: 4px; }
+      .date-helper i { color: #2563eb; }
+    </style>
 
     <style>
         :root {
@@ -74,8 +92,27 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
     <script>
         AOS.init({ duration: 700, once: true });
+
+        // Init semua date input dengan Flatpickr
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tanggal biasa (tanpa min)
+            document.querySelectorAll('input[type="date"]:not(.no-flatpickr)').forEach(function(el) {
+                const minDate = el.getAttribute('min') || null;
+                const maxDate = el.getAttribute('max') || null;
+                flatpickr(el, {
+                    locale: 'id',
+                    dateFormat: 'Y-m-d',
+                    allowInput: false,
+                    minDate: minDate,
+                    maxDate: maxDate,
+                    disableMobile: false,
+                });
+            });
+        });
 
         // Auto-dismiss flash alerts
         setTimeout(() => {

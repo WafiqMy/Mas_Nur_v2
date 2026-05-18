@@ -114,6 +114,8 @@
                                     <i class="bi bi-bank2 me-2 text-muted"></i>Kelola Rekening & QRIS</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.food-court.index') }}">
                                     <i class="bi bi-shop me-2 text-muted"></i>Kelola Food Court</a></li>
+                                <li><a class="dropdown-item rounded py-2" href="{{ route('admin.publikasi.index') }}">
+                                    <i class="bi bi-megaphone me-2 text-muted"></i>Kelola Publikasi</a></li>
                                 <li><a class="dropdown-item rounded py-2" href="{{ route('admin.profil-masjid.edit') }}">
                                     <i class="bi bi-building me-2 text-muted"></i>Edit Profil Masjid</a></li>
                                 <li><hr class="dropdown-divider my-1"></li>
@@ -121,8 +123,13 @@
 
                             <li><a class="dropdown-item rounded py-2" href="{{ route('profil-user.show') }}">
                                 <i class="bi bi-person me-2 text-muted"></i>Profil Saya</a></li>
+                            @if($isAdmin)
+                            <li><a class="dropdown-item rounded py-2" href="{{ route('admin.reservasi.permintaan') }}">
+                                <i class="bi bi-clipboard-check me-2 text-muted"></i>Permintaan Sewa</a></li>
+                            @else
                             <li><a class="dropdown-item rounded py-2" href="{{ route('reservasi.status') }}">
                                 <i class="bi bi-receipt me-2 text-muted"></i>Status Pemesanan</a></li>
+                            @endif
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">

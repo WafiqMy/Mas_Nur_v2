@@ -8,6 +8,8 @@
     $gambar = $event['gambar_event'] ?? '';
     if ($gambar && !str_starts_with($gambar, 'http')) {
         $gambar = $BASE_IMG . '/uploads/kegiatan/' . $gambar;
+    } elseif ($gambar && str_starts_with($gambar, 'http') && !str_contains($gambar, '/uploads/')) {
+        $gambar = $BASE_IMG . '/uploads/kegiatan/' . basename($gambar);
     }
     $idEvent = $event['id_event'] ?? 0;
 

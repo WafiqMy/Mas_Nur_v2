@@ -2,31 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ApiService;
+use App\Models\ProfilMasjid;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class ProfilMasjidController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
+    // ===================== PUBLIK =====================
 
     public function show()
     {
-        $raw    = $this->api->getLandingContent();
-        $profil = $raw['profil'] ?? null;
+        $profil = ProfilMasjid::first();
         return view('profil-masjid.show', compact('profil'));
     }
 
     public function struktur()
     {
-        $response = $this->api->getStruktur();
-        $struktur = ($response['status'] ?? '') === 'success' ? ($response['data'] ?? null) : null;
-        return view('profil-masjid.struktur', compact('struktur'));
+        $profil = ProfilMasjid::first();
+        return view('profil-masjid.struktur', compact('profil'));
     }
 
     // ===================== ADMIN ONLY =====================
@@ -34,8 +28,7 @@ class ProfilMasjidController extends Controller
     public function edit()
     {
         $this->authorizeAdmin();
-        $raw    = $this->api->getLandingContent();
-        $profil = $raw['profil'] ?? [];
+        $profil = ProfilMasjid::first() ?? new ProfilMasjid();
         return view('admin.profil-masjid.edit', compact('profil'));
     }
 
@@ -44,39 +37,51 @@ class ProfilMasjidController extends Controller
         $this->authorizeAdmin();
 
         $request->validate([
-            'judul_sejarah'        => 'required|string|max:255',
-            'deskripsi_sejarah'    => 'required|string',
-            'gambar_sejarah_masjid'=> 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'nama_masjid'           => 'nullable|string|max:255',
+            'deskripsi'             => 'nullable|string',
+            'sejarah_masjid'        => 'nullable|string',
+            'alamat'                => 'nullable|string|max:255',
+            'telepon'               => 'nullable|string|max:20',
+            'whatsapp'              => 'nullable|string|max:20',
+            'email'                 => 'nullable|email|max:255',
+            'website'               => 'nullable|url|max:255',
+            'gambar_sejarah_masjid' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        $user = Session::get('user');
+        $profil = ProfilMasjid::firstOrNew([]);
 
-        $fields = [
-            'judul_sejarah'     => $request->judul_sejarah,
-            'deskripsi_sejarah' => $request->deskripsi_sejarah,
-            'username'          => $user['username'] ?? 'admin',
+        $data = [
+            'nama_masjid'    => $request->nama_masjid ?? $profil->nama_masjid,
+            'deskripsi'      => $request->deskripsi,
+            'sejarah_masjid' => $request->sejarah_masjid ?? $request->deskripsi_sejarah,
+            'alamat'         => $request->alamat,
+            'telepon'        => $request->telepon,
+            'whatsapp'       => $request->whatsapp,
+            'email'          => $request->email,
+            'website'        => $request->website,
         ];
 
-        $response = $this->api->editProfilMasjid(
-            $fields,
-            $request->hasFile('gambar_sejarah_masjid') ? $request->file('gambar_sejarah_masjid') : null
-        );
-
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('admin.profil-masjid.edit')
-                ->with('success', 'Profil masjid berhasil diperbarui.');
+        if ($request->hasFile('gambar_sejarah_masjid')) {
+            if ($profil->gambar_sejarah_masjid) {
+                Storage::disk('public')->delete('profil_masjid/' . $profil->gambar_sejarah_masjid);
+            }
+            $file     = $request->file('gambar_sejarah_masjid');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('profil_masjid', $filename, 'public');
+            $data['gambar_sejarah_masjid'] = $filename;
         }
 
-        return back()->withErrors(['error' => $response['message'] ?? 'Gagal memperbarui profil.'])
-            ->withInput();
+        $profil->fill($data)->save();
+
+        return redirect()->route('admin.profil-masjid.edit')
+            ->with('success', 'Profil masjid berhasil diperbarui.');
     }
 
     public function editStruktur()
     {
         $this->authorizeAdmin();
-        $response = $this->api->getStruktur();
-        $struktur = ($response['status'] ?? '') === 'success' ? ($response['data'] ?? []) : [];
-        return view('admin.profil-masjid.edit-struktur', compact('struktur'));
+        $profil = ProfilMasjid::first() ?? new ProfilMasjid();
+        return view('admin.profil-masjid.edit-struktur', compact('profil'));
     }
 
     public function updateStruktur(Request $request)
@@ -84,29 +89,35 @@ class ProfilMasjidController extends Controller
         $this->authorizeAdmin();
 
         $request->validate([
-            'gambar_struktur_organisasi' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
-            'gambar_struktur_remas'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'deskripsi_remas'            => 'nullable|string',
+            'gambar_struktur_organisasi' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'gambar_struktur_remas'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        $user = Session::get('user');
+        $profil = ProfilMasjid::firstOrNew([]);
+        $data   = ['deskripsi_remas' => $request->deskripsi_remas];
 
-        $fields = [
-            'username' => $user['username'] ?? 'admin',
-        ];
-
-        $response = $this->api->editStruktur(
-            $fields,
-            $request->hasFile('gambar_struktur_organisasi') ? $request->file('gambar_struktur_organisasi') : null,
-            $request->hasFile('gambar_struktur_remas') ? $request->file('gambar_struktur_remas') : null
-        );
-
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('admin.profil-masjid.edit-struktur')
-                ->with('success', 'Struktur organisasi berhasil diperbarui.');
+        if ($request->hasFile('gambar_struktur_organisasi')) {
+            $file     = $request->file('gambar_struktur_organisasi');
+            $filename = time() . '_org_' . $file->getClientOriginalName();
+            $file->storeAs('profil_masjid', $filename, 'public');
+            $data['gambar_sampul'] = $filename; // pakai gambar_sampul untuk org
         }
 
-        return back()->withErrors(['error' => $response['message'] ?? 'Gagal memperbarui struktur.'])
-            ->withInput();
+        if ($request->hasFile('gambar_struktur_remas')) {
+            if ($profil->gambar_struktur_remas) {
+                Storage::disk('public')->delete('profil_masjid/' . $profil->gambar_struktur_remas);
+            }
+            $file     = $request->file('gambar_struktur_remas');
+            $filename = time() . '_remas_' . $file->getClientOriginalName();
+            $file->storeAs('profil_masjid', $filename, 'public');
+            $data['gambar_struktur_remas'] = $filename;
+        }
+
+        $profil->fill($data)->save();
+
+        return redirect()->route('admin.profil-masjid.edit-struktur')
+            ->with('success', 'Struktur organisasi berhasil diperbarui.');
     }
 
     private function authorizeAdmin(): void

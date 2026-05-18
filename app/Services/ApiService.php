@@ -16,6 +16,28 @@ class ApiService
 
     // ===================== HELPER =====================
 
+    /**
+     * Fix URL gambar dari API yang kadang mengembalikan path tidak lengkap.
+     * Contoh input salah : https://domain.com/berita_xxx.png
+     * Contoh output benar: https://domain.com/API/uploads/berita/berita_xxx.png
+     */
+    public function fixGambarUrl(string $gambar, string $folder): string
+    {
+        if (!$gambar) return '';
+
+        // Sudah URL lengkap dengan path yang benar
+        if (str_contains($gambar, '/uploads/')) {
+            return $gambar;
+        }
+
+        // URL lengkap tapi path salah (langsung ke root) — ambil nama file saja
+        if (str_starts_with($gambar, 'http')) {
+            $gambar = basename($gambar);
+        }
+
+        return $this->baseUrl . '/uploads/' . $folder . '/' . $gambar;
+    }
+
     protected function get(string $endpoint, array $params = []): array
     {
         try {

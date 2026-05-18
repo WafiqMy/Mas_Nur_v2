@@ -22,36 +22,29 @@
     <h2 class="fw-bold mb-1">Notifikasi</h2>
     <p class="text-muted mb-4">Pemberitahuan terbaru untuk Anda</p>
 
-    @if(!empty($notifikasi))
+    @if($notifikasi->count() > 0)
         @foreach($notifikasi as $n)
         @php
-            $statusBadge = $n['status_badge'] ?? 'Menunggu';
-            $link = $n['link'] ?? '#';
-            
-            // Validasi link lebih ketat
+            $statusBadge = $n->status_badge ?? 'Menunggu';
+            $link = $n->link ?? '#';
             if (!$link || $link === '#') {
                 $link = '#';
             } elseif (!str_starts_with($link, 'http') && !str_starts_with($link, '/')) {
-                // Jika bukan URL absolut atau path relatif, tambahkan /
                 $link = '/' . $link;
             }
         @endphp
         <a href="{{ $link }}" class="notif-card status-{{ $statusBadge }}">
             <div class="d-flex justify-content-between align-items-start gap-2">
-                <h5 class="notif-title mb-0">{{ $n['judul'] ?? 'Notifikasi' }}</h5>
-                @if(!empty($n['is_new']))
+                <h5 class="notif-title mb-0">{{ $n->judul ?? 'Notifikasi' }}</h5>
+                @if($n->is_new)
                 <span class="badge bg-danger rounded-pill notif-badge">BARU</span>
                 @endif
             </div>
             <span class="notif-time">
                 <i class="bi bi-clock me-1"></i>
-                @if(!empty($n['waktu']))
-                    {{ $n['waktu'] }}
-                @else
-                    {{ $n['created_at'] ?? 'Baru saja' }}
-                @endif
+                {{ $n->created_at?->diffForHumans() ?? 'Baru saja' }}
             </span>
-            <div class="notif-msg">{!! $n['pesan'] ?? '' !!}</div>
+            <div class="notif-msg">{!! $n->pesan ?? '' !!}</div>
         </a>
         @endforeach
     @else
@@ -59,6 +52,5 @@
         <i class="bi bi-bell-slash display-1 text-muted opacity-25"></i>
         <p class="text-muted mt-3">Belum ada notifikasi baru.</p>
     </div>
-    @endif
-</div>
+    @endif</div>
 @endsection

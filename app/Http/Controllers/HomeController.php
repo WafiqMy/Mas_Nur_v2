@@ -2,26 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ApiService;
+use App\Models\Berita;
+use App\Models\Event;
+use App\Models\FoodCourt;
+use App\Models\ProfilMasjid;
 
 class HomeController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     public function index()
     {
-        $raw = $this->api->getLandingContent();
+        $berita = Berita::orderBy('tanggal_berita', 'desc')->limit(3)->get();
+        $acara  = Event::orderBy('tanggal_event', 'desc')->limit(3)->get();
 
-        $profil  = $raw['profil']  ?? null;
-        $berita  = $raw['berita']  ?? [];
-        $acara   = $raw['acara']   ?? [];
-        $layanan = $raw['layanan'] ?? null;
-
-        return view('home', compact('profil', 'berita', 'acara', 'layanan'));
+        return view('home', compact('berita', 'acara'));
     }
 }

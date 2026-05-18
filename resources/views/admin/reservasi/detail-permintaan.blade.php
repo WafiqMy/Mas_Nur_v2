@@ -4,15 +4,13 @@
 
 @section('content')
 @php
-    // Data bisa dari format kalender (extendedProps) atau langsung dari tabel
-    $props = $reservasi['extendedProps'] ?? $reservasi;
-    $status = $reservasi['status_reservasi'] ?? ($props['status'] ?? 'Menunggu');
+    $status = $reservasi->status_reservasi ?? 'Menunggu';
     $statusLower = strtolower($status);
     $badgeClass = 'bg-warning text-dark';
     if (str_contains($statusLower, 'setuju')) $badgeClass = 'bg-success';
     elseif (str_contains($statusLower, 'tolak') || str_contains($statusLower, 'batal')) $badgeClass = 'bg-danger';
 
-    $idReservasi = $reservasi['id_reservasi'] ?? ($reservasi['id'] ?? 0);
+    $idReservasi = $reservasi->id;
 @endphp
 
 <div class="container py-5" style="max-width: 700px;">
@@ -28,60 +26,58 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Barang</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['nama_barang'] ?? ($props['barang'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->nama_barang ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Jenis</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['jenis'] ?? ($props['jenis'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->jenis ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Peminjam</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['nama_pengguna'] ?? ($props['peminjam'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->nama_pengguna ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">No. Telepon</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['no_tlp_pengguna'] ?? ($props['telepon'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->no_tlp_pengguna ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Email</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['email_pengguna'] ?? ($props['email'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->email_pengguna ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Jumlah Unit</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['total_peminjaman'] ?? ($props['jumlah'] ?? 1) }} Unit</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->total_peminjaman ?? 1 }} Unit</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Tanggal Mulai</p>
                 <p class="fw-semibold mb-0">
-                    @php $tglMulai = $reservasi['tanggal_mulai_reservasi'] ?? ($reservasi['start'] ?? '-'); @endphp
-                    {{ $tglMulai !== '-' ? date('d F Y', strtotime($tglMulai)) : '-' }}
+                    {{ $reservasi->tanggal_mulai_reservasi?->format('d F Y') ?? '-' }}
                 </p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Tanggal Selesai</p>
                 <p class="fw-semibold mb-0">
-                    @php $tglSelesai = $reservasi['tanggal_selesai_reservasi'] ?? ($reservasi['end'] ?? '-'); @endphp
-                    {{ $tglSelesai !== '-' ? date('d F Y', strtotime($tglSelesai)) : '-' }}
+                    {{ $reservasi->tanggal_selesai_reservasi?->format('d F Y') ?? '-' }}
                 </p>
             </div>
             <div class="col-12">
                 <p class="text-muted small mb-1">Keperluan</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['keperluan'] ?? ($props['keperluan'] ?? '-') }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->keperluan ?? '-' }}</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Total Biaya</p>
                 <p class="fw-bold text-primary mb-0 fs-5">
-                    Rp {{ number_format((float)($reservasi['total_harga'] ?? $props['harga'] ?? 0), 0, ',', '.') }}
+                    Rp {{ number_format((float)($reservasi->total_harga ?? 0), 0, ',', '.') }}
                 </p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted small mb-1">Status</p>
                 <span class="badge {{ $badgeClass }} px-3 py-2">{{ strtoupper($status) }}</span>
             </div>
-            @if(!empty($reservasi['notes']))
+            @if($reservasi->notes)
             <div class="col-12">
                 <p class="text-muted small mb-1">Catatan</p>
-                <p class="fw-semibold mb-0">{{ $reservasi['notes'] }}</p>
+                <p class="fw-semibold mb-0">{{ $reservasi->notes }}</p>
             </div>
             @endif
         </div>
@@ -95,10 +91,11 @@
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Status Baru <span class="text-danger">*</span></label>
-                <select name="status_reservasi" class="form-select" required>
+                <select name="status" class="form-select" required>
                     <option value="">Pilih Status</option>
                     <option value="Disetujui">✅ Disetujui</option>
                     <option value="Ditolak">❌ Ditolak</option>
+                    <option value="Batal">🚫 Batal</option>
                 </select>
             </div>
 

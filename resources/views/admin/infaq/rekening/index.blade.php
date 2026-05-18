@@ -673,7 +673,7 @@
 
                         @if ($rekening->qris_image)
                         <div style="margin-bottom: 1rem;">
-                            <img src="{{ asset('storage/' . $rekening->qris_image) }}" alt="QRIS"
+                            <img src="{{ $rekening->qris_url }}" alt="QRIS"
                                  style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 1px solid #e5e7eb;">
                             <form method="POST" action="{{ route('admin.infaq.rekening.removeQris', $rekening) }}"
                                   style="display: inline; margin-top: 0.5rem;">
@@ -692,7 +692,7 @@
                                onchange="previewImage(this, 'qrisPreview{{ $rekening->id }}')">
                         <div class="image-preview empty" id="qrisPreview{{ $rekening->id }}">
                             @if ($rekening->qris_image)
-                            <img src="{{ asset('storage/' . $rekening->qris_image) }}" alt="QRIS">
+                            <img src="{{ $rekening->qris_url }}" alt="QRIS">
                             @else
                             <i class="bi bi-image"></i> Belum Ada Gambar Baru
                             @endif

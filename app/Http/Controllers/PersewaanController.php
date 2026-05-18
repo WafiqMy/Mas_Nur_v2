@@ -2,55 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ApiService;
+use App\Models\Persewaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class PersewaanController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     // ===================== PUBLIK =====================
 
     public function index()
     {
-        $raw = $this->api->getBarangList();
-
-        // API api_barang.php mengembalikan array langsung
-        $semua = is_array($raw) && isset($raw[0]) ? $raw : ($raw['data'] ?? []);
-
-        $gedung     = array_values(array_filter($semua, fn($b) => strtolower($b['Jenis'] ?? '') === 'gedung'));
-        $multimedia = array_values(array_filter($semua, fn($b) => str_contains(strtolower($b['Jenis'] ?? ''), 'multimedia')));
-        $musik      = array_values(array_filter($semua, fn($b) =>
-            str_contains(strtolower($b['Jenis'] ?? ''), 'musik') ||
-            str_contains(strtolower($b['Jenis'] ?? ''), 'banjari')
-        ));
+        $semua      = Persewaan::all();
+        $gedung     = $semua->where('Jenis', 'Gedung')->values();
+        $multimedia = $semua->filter(fn($b) => str_contains(strtolower($b->Jenis), 'multimedia'))->values();
+        $musik      = $semua->filter(fn($b) =>
+            str_contains(strtolower($b->Jenis), 'musik') ||
+            str_contains(strtolower($b->Jenis), 'banjari')
+        )->values();
 
         return view('reservasi.index', compact('gedung', 'multimedia', 'musik'));
     }
 
     public function show($id)
     {
-        $raw = $this->api->getBarangList();
-        $semua = is_array($raw) && isset($raw[0]) ? $raw : ($raw['data'] ?? []);
-
-        $barang = null;
-        foreach ($semua as $b) {
-            if ((int)($b['id_persewaan'] ?? $b['id'] ?? 0) === (int)$id) {
-                $barang = $b;
-                break;
-            }
-        }
-
-        if (!$barang) {
-            abort(404, 'Barang tidak ditemukan.');
-        }
-
+        $barang = Persewaan::findOrFail($id);
         return view('reservasi.detail-barang', compact('barang'));
     }
 
@@ -59,10 +35,7 @@ class PersewaanController extends Controller
     public function adminIndex()
     {
         $this->authorizeAdmin();
-
-        $raw = $this->api->getBarangList();
-        $barang = is_array($raw) && isset($raw[0]) ? $raw : ($raw['data'] ?? []);
-
+        $barang = Persewaan::orderBy('created_at', 'desc')->get();
         return view('admin.reservasi.kelola', compact('barang'));
     }
 
@@ -84,52 +57,36 @@ class PersewaanController extends Controller
             'deskripsi'   => 'nullable|string',
             'spesifikasi' => 'nullable|string',
             'fasilitas'   => 'nullable|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        $fields = [
+        $data = [
             'nama_barang' => $request->nama_barang,
             'Jenis'       => $request->Jenis,
-            'harga'       => (int) $request->harga,
-            'jumlah'      => (int) $request->jumlah,
+            'harga'       => $request->harga,
+            'jumlah'      => $request->jumlah,
             'deskripsi'   => $request->deskripsi ?? '',
             'spesifikasi' => $request->spesifikasi ?? '',
             'fasilitas'   => $request->fasilitas ?? '',
         ];
 
-        $response = $this->api->tambahBarang(
-            $fields,
-            $request->hasFile('gambar') ? $request->file('gambar') : null
-        );
-
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('admin.reservasi.index')
-                ->with('success', 'Barang berhasil ditambahkan.');
+        if ($request->hasFile('gambar')) {
+            $file     = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('persewaan', $filename, 'public');
+            $data['gambar'] = $filename;
         }
 
-        return back()->withErrors(['error' => $response['message'] ?? 'Gagal menambahkan barang.'])
-            ->withInput();
+        Persewaan::create($data);
+
+        return redirect()->route('admin.reservasi.index')
+            ->with('success', 'Barang berhasil ditambahkan.');
     }
 
     public function edit($id)
     {
         $this->authorizeAdmin();
-
-        $raw = $this->api->getBarangList();
-        $semua = is_array($raw) && isset($raw[0]) ? $raw : ($raw['data'] ?? []);
-
-        $barang = null;
-        foreach ($semua as $b) {
-            if ((int)($b['id_persewaan'] ?? $b['id'] ?? 0) === (int)$id) {
-                $barang = $b;
-                break;
-            }
-        }
-
-        if (!$barang) {
-            abort(404, 'Barang tidak ditemukan.');
-        }
-
+        $barang = Persewaan::findOrFail($id);
         return view('admin.reservasi.edit-barang', compact('barang'));
     }
 
@@ -137,51 +94,56 @@ class PersewaanController extends Controller
     {
         $this->authorizeAdmin();
 
+        $barang = Persewaan::findOrFail($id);
+
         $request->validate([
             'nama_barang' => 'required|string|max:255',
             'Jenis'       => 'required|in:Gedung,Alat Musik,Alat Multimedia',
             'harga'       => 'required|numeric|min:0',
             'jumlah'      => 'required|integer|min:1',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        $fields = [
-            'id_persewaan' => $id,
-            'nama_barang'  => $request->nama_barang,
-            'Jenis'        => $request->Jenis,
-            'harga'        => (int) $request->harga,
-            'jumlah'       => (int) $request->jumlah,
-            'deskripsi'    => $request->deskripsi ?? '',
-            'spesifikasi'  => $request->spesifikasi ?? '',
-            'fasilitas'    => $request->fasilitas ?? '',
+        $data = [
+            'nama_barang' => $request->nama_barang,
+            'Jenis'       => $request->Jenis,
+            'harga'       => $request->harga,
+            'jumlah'      => $request->jumlah,
+            'deskripsi'   => $request->deskripsi ?? '',
+            'spesifikasi' => $request->spesifikasi ?? '',
+            'fasilitas'   => $request->fasilitas ?? '',
         ];
 
-        $response = $this->api->editBarang(
-            $fields,
-            $request->hasFile('gambar') ? $request->file('gambar') : null
-        );
-
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('admin.reservasi.index')
-                ->with('success', 'Barang berhasil diperbarui.');
+        if ($request->hasFile('gambar')) {
+            if ($barang->gambar) {
+                Storage::disk('public')->delete('persewaan/' . $barang->gambar);
+            }
+            $file     = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('persewaan', $filename, 'public');
+            $data['gambar'] = $filename;
         }
 
-        return back()->withErrors(['error' => $response['message'] ?? 'Gagal memperbarui barang.'])
-            ->withInput();
+        $barang->update($data);
+
+        return redirect()->route('admin.reservasi.index')
+            ->with('success', 'Barang berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $this->authorizeAdmin();
 
-        $response = $this->api->hapusBarang((int) $id);
+        $barang = Persewaan::findOrFail($id);
 
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('admin.reservasi.index')
-                ->with('success', 'Barang berhasil dihapus.');
+        if ($barang->gambar) {
+            Storage::disk('public')->delete('persewaan/' . $barang->gambar);
         }
 
-        return back()->withErrors(['error' => $response['message'] ?? 'Gagal menghapus barang.']);
+        $barang->delete();
+
+        return redirect()->route('admin.reservasi.index')
+            ->with('success', 'Barang berhasil dihapus.');
     }
 
     private function authorizeAdmin(): void

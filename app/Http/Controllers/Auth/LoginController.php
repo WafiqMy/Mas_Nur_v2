@@ -3,19 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\ApiService;
+use App\Models\Akun;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     public function showLoginForm()
     {
         if (Session::has('user')) {
@@ -34,46 +28,39 @@ class LoginController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        $response = $this->api->login($request->username, $request->password);
+        $akun = Akun::where('username', $request->username)->first();
 
-        if (isset($response['status']) && $response['status'] === 'success') {
-            // Ambil data dari response API
-            $data = $response['data'] ?? [];
-
-            // Cek berbagai kemungkinan key untuk role dari API
-            $role = $data['role']      ??
-                    $data['Role']      ??
-                    $data['tipe']      ??
-                    $data['user_role'] ??
-                    $data['level']     ??
-                    'user';
-
-            // Normalisasi role ke lowercase
-            $role = strtolower(trim((string) $role));
-
-            // Simpan data user ke session
-            Session::put('user', [
-                'username' => $request->username,
-                'nama'     => $data['nama']      ?? $data['name']     ?? $data['nama_lengkap'] ?? $request->username,
-                'email'    => $data['email']     ?? '',
-                'role'     => $role,
-                'foto'     => $data['foto']      ?? $data['gambar']   ?? '',
-            ]);
-
-            $request->session()->regenerate();
-
-            // Redirect admin ke halaman admin, user biasa ke home
-            if ($role === 'admin') {
-                return redirect()->route('admin.berita.index')
-                    ->with('success', 'Selamat datang, Admin!');
-            }
-
-            return redirect()->intended(route('home'));
+        if (!$akun || !Hash::check($request->password, $akun->password)) {
+            return back()->withErrors([
+                'username' => 'Username atau password salah.',
+            ])->withInput();
         }
 
-        return back()->withErrors([
-            'username' => $response['message'] ?? 'Login gagal. Periksa username dan password Anda.',
-        ])->withInput();
+        if ($akun->status !== 'aktif') {
+            return back()->withErrors([
+                'username' => 'Akun belum diverifikasi. Silakan cek email kamu.',
+            ])->withInput();
+        }
+
+        $role = strtolower(trim((string) $akun->role));
+
+        Session::put('user', [
+            'username'  => $akun->username,
+            'nama'      => $akun->nama,
+            'email'     => $akun->email,
+            'role'      => $role,
+            'foto'      => $akun->gambar ?? '',
+            'no_telpon' => $akun->no_telpon ?? '',
+        ]);
+
+        $request->session()->regenerate();
+
+        if ($role === 'admin') {
+            return redirect()->route('admin.berita.index')
+                ->with('success', 'Selamat datang, Admin!');
+        }
+
+        return redirect()->intended(route('home'));
     }
 
     public function logout(Request $request)

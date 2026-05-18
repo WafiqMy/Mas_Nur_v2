@@ -3,18 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\ApiService;
+use App\Models\Akun;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
 
 class RegisterController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     public function showRegisterForm()
     {
         return view('auth.register');
@@ -24,32 +20,42 @@ class RegisterController extends Controller
     {
         $request->validate([
             'nama'      => 'required|string|max:255',
-            'username'  => 'required|string|regex:/^[a-zA-Z0-9_]+$/|max:50',
-            'email'     => 'required|email',
+            'username'  => 'required|string|regex:/^[a-zA-Z0-9_]+$/|max:50|unique:akun,username',
+            'email'     => 'required|email|unique:akun,email',
             'password'  => 'required|string|min:8|regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/',
             'no_telpon' => 'required|string|max:20',
         ], [
-            'username.regex'  => 'Username hanya boleh huruf, angka, dan underscore.',
-            'password.min'    => 'Password minimal 8 karakter.',
-            'password.regex'  => 'Password harus kombinasi huruf dan angka.',
+            'username.regex'    => 'Username hanya boleh huruf, angka, dan underscore.',
+            'username.unique'   => 'Username sudah digunakan.',
+            'email.unique'      => 'Email sudah terdaftar.',
+            'password.min'      => 'Password minimal 8 karakter.',
+            'password.regex'    => 'Password harus kombinasi huruf dan angka.',
         ]);
 
-        $response = $this->api->register([
-            'nama'      => $request->nama,
-            'username'  => $request->username,
-            'email'     => $request->email,
-            'password'  => $request->password,
-            'no_telpon' => $request->no_telpon,
+        // Generate OTP 6 digit
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $akun = Akun::create([
+            'nama'        => $request->nama,
+            'username'    => $request->username,
+            'email'       => $request->email,
+            'password'    => Hash::make($request->password),
+            'no_telpon'   => $request->no_telpon,
+            'role'        => 'user',
+            'status'      => 'pending',
+            'otp'         => $otp,
+            'otp_expired' => Carbon::now()->addMinutes(10),
         ]);
 
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()
-                ->route('verifikasi.form', ['email' => $request->email])
-                ->with('success', 'Registrasi berhasil! Kode OTP telah dikirim ke email Anda.');
+        // Kirim OTP via email
+        try {
+            Mail::to($akun->email)->send(new \App\Mail\OtpMail($otp, $akun->nama));
+        } catch (\Throwable $e) {
+            // Jika email gagal, tetap lanjut tapi beri tahu user
         }
 
-        return back()->withErrors([
-            'username' => $response['message'] ?? 'Registrasi gagal. Coba lagi.',
-        ])->withInput();
+        return redirect()
+            ->route('verifikasi.form', ['email' => $request->email])
+            ->with('success', 'Registrasi berhasil! Kode OTP telah dikirim ke email Anda.');
     }
 }

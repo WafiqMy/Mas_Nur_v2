@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
                 'sejarah_masjid' => 'Masjid Nurul Huda berdiri sebagai pusat kegiatan keagamaan dan sosial masyarakat.',
                 'alamat'         => 'Nganjuk, Jawa Timur',
                 'telepon'        => '-',
+                'whatsapp'       => '6285808441941',
                 'email'          => 'info@masjidnurulhuda.com',
             ]
         );

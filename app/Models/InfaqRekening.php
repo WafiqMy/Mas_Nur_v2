@@ -27,7 +27,9 @@ class InfaqRekening extends Model
     public function getQrisUrlAttribute(): ?string
     {
         if ($this->qris_image) {
-            return asset('storage/infaq/' . $this->qris_image);
+            // Controller menyimpan sebagai 'infaq/filename.ext'
+            // asset('storage/infaq/filename.ext') sudah benar
+            return asset('storage/' . $this->qris_image);
         }
         return null;
     }

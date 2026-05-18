@@ -17,14 +17,14 @@ class InfaqRekeningController extends Controller
      */
     public function index(): View
     {
-        $rekenings = InfaqRekening::orderBy('urutan', 'asc')->get();
+        $rekenings = InfaqRekening::orderBy('id', 'asc')->get();
         $activeCount = InfaqRekening::active()->count();
         $withQrisCount = InfaqRekening::whereNotNull('qris_image')->count();
-        
+
         return view('admin.infaq.rekening.index', [
-            'rekenings' => $rekenings,
-            'activeCount' => $activeCount,
-            'withQrisCount' => $withQrisCount,
+            'rekenings'      => $rekenings,
+            'activeCount'    => $activeCount,
+            'withQrisCount'  => $withQrisCount,
             'totalRekenings' => $rekenings->count(),
         ]);
     }
@@ -36,17 +36,12 @@ class InfaqRekeningController extends Controller
     {
         $data = $request->validated();
 
-        // Handle QRIS image upload
         if ($request->hasFile('qris_image')) {
             $file = $request->file('qris_image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('infaq', $filename, 'public');
             $data['qris_image'] = $path;
         }
-
-        // Get the highest urutan value
-        $maxUrutan = InfaqRekening::max('urutan') ?? 0;
-        $data['urutan'] = $maxUrutan + 1;
 
         InfaqRekening::create($data);
 

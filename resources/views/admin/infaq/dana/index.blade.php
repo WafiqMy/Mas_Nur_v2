@@ -1,416 +1,499 @@
 @extends('layouts.app')
-
-@section('title', 'Kelola Infaq Dana - Admin')
+@section('title', 'Kelola Infaq - Admin')
 
 @push('styles')
 <style>
-    .dashboard-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
+.infaq-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    color: white; padding: 2rem; border-radius: 14px; margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.2);
+}
+.infaq-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem; }
+.infaq-header p  { opacity: 0.9; margin: 0; }
 
-    .dashboard-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    }
+/* Ringkasan Cards */
+.summary-card {
+    border: none; border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+.summary-card:hover { transform: translateY(-4px); }
+.summary-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.icon-masuk   { background: #d1fae5; color: #059669; }
+.icon-keluar  { background: #fee2e2; color: #dc2626; }
+.icon-saldo   { background: #dbeafe; color: #2563eb; }
+.icon-bulan   { background: #fef3c7; color: #d97706; }
 
-    .dashboard-card-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
+/* Tabs */
+.infaq-tabs .nav-link {
+    border-radius: 10px 10px 0 0; font-weight: 600; color: #6b7280;
+    border: none; padding: 0.75rem 1.5rem;
+}
+.infaq-tabs .nav-link.active { background: white; color: #2563eb; border-bottom: 3px solid #2563eb; }
 
-    .card-primary { background: linear-gradient(135deg, #3B5BDB 0%, #2563eb 100%); color: white; }
-    .card-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-    .card-warning { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); color: white; }
-    .card-info { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; }
+/* Table */
+.infaq-table { border-radius: 14px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
+.infaq-table thead { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: white; }
+.infaq-table th, .infaq-table td { padding: 1rem 1.2rem; border: none; border-bottom: 1px solid #f3f4f6; }
+.infaq-table tbody tr:hover { background: #f8f9ff; }
 
-    .admin-table {
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        background: white;
-    }
+/* Badge tipe */
+.badge-masuk  { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+.badge-keluar { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
 
-    .admin-table thead {
-        background: linear-gradient(135deg, #3B5BDB 0%, #2563eb 100%);
-        color: white;
-    }
+/* Modal */
+.modal-content { border: none; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.modal-header  { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: white; border-radius: 14px 14px 0 0; border: none; }
+.modal-header .btn-close { filter: brightness(0) invert(1); }
 
-    .admin-table th {
-        padding: 1.2rem;
-        font-weight: 700;
-        border: none;
-    }
+.btn-primary-custom {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    border: none; color: white; padding: 0.6rem 1.4rem;
+    border-radius: 8px; font-weight: 600; transition: all 0.3s;
+}
+.btn-primary-custom:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
 
-    .admin-table td {
-        padding: 1rem 1.2rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .admin-table tbody tr:hover {
-        background: #f8f9fa;
-    }
-
-    .btn-sm-custom {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-        border-radius: 6px;
-        transition: all 0.2s;
-    }
-
-    .btn-sm-custom:hover {
-        transform: translateY(-2px);
-    }
-
-    .modal-content {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    }
-
-    .modal-header {
-        background: linear-gradient(135deg, #3B5BDB 0%, #2563eb 100%);
-        color: white;
-        border: none;
-        border-radius: 16px 16px 0 0;
-    }
-
-    .modal-header .btn-close {
-        filter: brightness(0) invert(1);
-    }
-
-    .form-control, .form-select {
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        padding: 0.7rem 1rem;
-        transition: all 0.2s;
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .btn-primary-custom {
-        background: linear-gradient(135deg, #3B5BDB 0%, #2563eb 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-        color: white;
-    }
-
-    .btn-danger-custom {
-        background: #ef4444;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-
-    .btn-danger-custom:hover {
-        background: #dc2626;
-        transform: translateY(-2px);
-    }
-
-    .page-title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #1f2937;
-        margin-bottom: 0.5rem;
-    }
-
-    .page-subtitle {
-        color: #6b7280;
-        font-size: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .no-data-message {
-        text-align: center;
-        padding: 3rem;
-        color: #6b7280;
-    }
-
-    @media (max-width: 768px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .admin-table {
-            font-size: 0.9rem;
-        }
-
-        .admin-table th,
-        .admin-table td {
-            padding: 0.7rem;
-        }
-    }
+.alert-custom { padding: 1rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid; }
+.alert-success-custom { background: #d1fae5; border-color: #10b981; color: #065f46; }
+.alert-danger-custom  { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
 </style>
 @endpush
 
 @section('content')
+<div class="container-fluid py-4">
 
-<div class="container py-5">
-    <div class="mb-5">
-        <h1 class="page-title">Kelola Infaq Dana</h1>
-        <p class="page-subtitle">Manajemen data infaq dan dana yang masuk</p>
+    {{-- Alerts --}}
+    @if(session('success'))
+        <div class="alert alert-success-custom"><i class="bi bi-check-circle me-2"></i>{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger-custom">
+            <i class="bi bi-exclamation-triangle me-2"></i><strong>Terjadi kesalahan:</strong>
+            <ul class="mb-0 mt-1 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    {{-- Header --}}
+    <div class="infaq-header">
+        <h1><i class="bi bi-cash-coin me-2"></i>Kelola Laporan Infaq</h1>
+        <p>Catat dana masuk dan pengeluaran infaq masjid secara transparan</p>
     </div>
 
-    {{-- DASHBOARD CARDS --}}
-    <div class="row mb-5">
-        <div class="col-md-4 mb-3">
-            <div class="dashboard-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="dashboard-card-icon card-primary me-3">
-                            <i class="bi bi-calendar-check"></i>
-                        </div>
-                        <div>
-                            <p class="text-muted small mb-1">Dana Bulan Ini</p>
-                            <h4 class="mb-0" style="color: #2563eb; font-weight: 700;">
-                                Rp {{ number_format((float) $totalBulanIni, 0, ',', '.') }}
-                            </h4>
-                        </div>
+    {{-- Ringkasan --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card summary-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="summary-icon icon-masuk"><i class="bi bi-arrow-down-circle-fill"></i></div>
+                    <div>
+                        <div class="text-muted small">Total Dana Masuk</div>
+                        <div class="fw-700 fs-6" style="color:#059669;font-weight:700;">Rp {{ number_format($totalMasuk,0,',','.') }}</div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="dashboard-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="dashboard-card-icon card-success me-3">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <div>
-                            <p class="text-muted small mb-1">Total Dana Keseluruhan</p>
-                            <h4 class="mb-0" style="color: #059669; font-weight: 700;">
-                                Rp {{ number_format((float) $totalKeseluruhan, 0, ',', '.') }}
-                            </h4>
-                        </div>
+        <div class="col-6 col-md-3">
+            <div class="card summary-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="summary-icon icon-keluar"><i class="bi bi-arrow-up-circle-fill"></i></div>
+                    <div>
+                        <div class="text-muted small">Total Dana Keluar</div>
+                        <div class="fw-700 fs-6" style="color:#dc2626;font-weight:700;">Rp {{ number_format($totalKeluar,0,',','.') }}</div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="dashboard-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="dashboard-card-icon card-warning me-3">
-                            <i class="bi bi-hash"></i>
-                        </div>
-                        <div>
-                            <p class="text-muted small mb-1">Jumlah Transaksi</p>
-                            <h4 class="mb-0" style="color: #F59E0B; font-weight: 700;">{{ $jumlahTransaksi }}</h4>
-                        </div>
+        <div class="col-6 col-md-3">
+            <div class="card summary-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="summary-icon icon-saldo"><i class="bi bi-wallet2"></i></div>
+                    <div>
+                        <div class="text-muted small">Saldo Saat Ini</div>
+                        <div class="fw-700 fs-6" style="color:#2563eb;font-weight:700;">Rp {{ number_format($saldo,0,',','.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card summary-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="summary-icon icon-bulan"><i class="bi bi-calendar-month"></i></div>
+                    <div>
+                        <div class="text-muted small">Masuk Bulan Ini</div>
+                        <div class="fw-700 fs-6" style="color:#d97706;font-weight:700;">Rp {{ number_format($totalMasukBulan,0,',','.') }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ADD BUTTON --}}
-    <div class="mb-4">
-        <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addInfaqModal">
-            <i class="bi bi-plus-circle me-2"></i>Tambah Data Infaq
-        </button>
-        <a href="{{ route('admin.infaq.rekening.index') }}" class="btn btn-outline-primary ms-2">
-            <i class="bi bi-gear me-2"></i>Kelola Rekening & QRIS
-        </a>
-    </div>
-
-    {{-- FILTER FORM --}}
-    <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+    {{-- Filter --}}
+    <div class="card mb-4" style="border:none;border-radius:14px;box-shadow:0 4px 15px rgba(0,0,0,0.07);">
         <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-5">
-                    <label class="form-label fw-600">Bulan</label>
-                    <select name="bulan" class="form-select">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small">Bulan</label>
+                    <select name="bulan" class="form-select form-select-sm">
                         <option value="">Semua Bulan</option>
-                        @for($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::createFromFormat('m', $i)->translatedFormat('F') }}
+                        @for($i=1;$i<=12;$i++)
+                            <option value="{{ $i }}" {{ $bulan==$i?'selected':'' }}>
+                                {{ \Carbon\Carbon::createFromFormat('m',$i)->translatedFormat('F') }}
                             </option>
                         @endfor
                     </select>
                 </div>
-                <div class="col-md-5">
-                    <label class="form-label fw-600">Tahun</label>
-                    <select name="tahun" class="form-select">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small">Tahun</label>
+                    <select name="tahun" class="form-select form-select-sm">
                         <option value="">Semua Tahun</option>
-                        @for($i = now()->year; $i >= now()->year - 5; $i--)
-                            <option value="{{ $i }}" {{ request('tahun') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                        @for($i=now()->year;$i>=now()->year-5;$i--)
+                            <option value="{{ $i }}" {{ $tahun==$i?'selected':'' }}>{{ $i }}</option>
                         @endfor
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary-custom w-100">
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary-custom btn-sm w-100">
                         <i class="bi bi-funnel me-1"></i>Filter
                     </button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ route('admin.infaq.dana.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- TABLE --}}
-    @if($dana->count() > 0)
-        <div class="table-responsive admin-table">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width: 5%">No</th>
-                        <th style="width: 20%">Tanggal</th>
-                        <th style="width: 25%">Judul</th>
-                        <th style="width: 30%">Keterangan</th>
-                        <th style="width: 15%" class="text-end">Jumlah</th>
-                        <th style="width: 5%" class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($dana as $item)
-                        <tr>
-                            <td>{{ ($dana->currentPage() - 1) * $dana->perPage() + $loop->iteration }}</td>
-                            <td>{{ $item->tanggal->format('d M Y') }}</td>
-                            <td><strong>{{ $item->judul }}</strong></td>
-                            <td>{{ \Illuminate\Support\Str::limit($item->keterangan ?? '-', 50) }}</td>
-                            <td class="text-end" style="color: #059669; font-weight: 700;">
-                                Rp {{ number_format((float) $item->jumlah, 0, ',', '.') }}
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-primary-custom btn-sm-custom" 
-                                        data-bs-toggle="modal" data-bs-target="#editInfaqModal{{ $item->id }}">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <form action="{{ route('admin.infaq.dana.destroy', $item->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger-custom" onclick="return confirm('Yakin ingin menghapus?')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    {{-- Tabs --}}
+    <ul class="nav infaq-tabs mb-0 border-bottom" id="infaqTab">
+        <li class="nav-item">
+            <a class="nav-link active" id="masuk-tab" data-bs-toggle="tab" href="#tab-masuk">
+                <i class="bi bi-arrow-down-circle me-1 text-success"></i>Dana Masuk
+                <span class="badge bg-success ms-1">{{ $danaMasuk->total() }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="keluar-tab" data-bs-toggle="tab" href="#tab-keluar">
+                <i class="bi bi-arrow-up-circle me-1 text-danger"></i>Dana Keluar
+                <span class="badge bg-danger ms-1">{{ $danaKeluar->total() }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content bg-white rounded-bottom p-3" style="box-shadow:0 4px 15px rgba(0,0,0,0.07);">
+
+        {{-- TAB DANA MASUK --}}
+        <div class="tab-pane fade show active" id="tab-masuk">
+            <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
+                <p class="text-muted mb-0 small">Catat setiap dana infaq yang diterima masjid</p>
+                <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahMasuk">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Dana Masuk
+                </button>
+            </div>
+
+            @if($danaMasuk->count() > 0)
+                <div class="table-responsive infaq-table">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">No</th>
+                                <th style="width:18%">Tanggal</th>
+                                <th>Keterangan / Sumber</th>
+                                <th style="width:20%" class="text-end">Jumlah</th>
+                                <th style="width:10%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($danaMasuk as $item)
+                            <tr>
+                                <td>{{ ($danaMasuk->currentPage()-1)*$danaMasuk->perPage()+$loop->iteration }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->tanggal->format('d M Y') }}</div>
+                                    <div class="text-muted small">{{ $item->tanggal->translatedFormat('l') }}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->judul }}</div>
+                                    @if($item->keterangan)
+                                        <div class="text-muted small">{{ Str::limit($item->keterangan, 60) }}</div>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge-masuk">+ Rp {{ number_format((float)$item->jumlah,0,',','.') }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-warning me-1"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditMasuk{{ $item->id }}"
+                                            title="Edit"><i class="bi bi-pencil"></i></button>
+                                    <form action="{{ route('admin.infaq.dana.destroy', $item->id) }}" method="POST" class="d-inline"
+                                          onsubmit="return confirm('Hapus data ini?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">{{ $danaMasuk->appends(request()->query())->links() }}</div>
+            @else
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox display-4 d-block mb-2 opacity-50"></i>
+                    <p>Belum ada data dana masuk</p>
+                </div>
+            @endif
         </div>
 
-        {{-- PAGINATION --}}
-        <div class="d-flex justify-content-center mt-4">
-            {{ $dana->links() }}
+        {{-- TAB DANA KELUAR --}}
+        <div class="tab-pane fade" id="tab-keluar">
+            <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
+                <p class="text-muted mb-0 small">Catat setiap penggunaan dana infaq masjid</p>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahKeluar"
+                        style="border-radius:8px;font-weight:600;">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Dana Keluar
+                </button>
+            </div>
+
+            @if($danaKeluar->count() > 0)
+                <div class="table-responsive infaq-table">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">No</th>
+                                <th style="width:18%">Tanggal</th>
+                                <th>Digunakan Untuk</th>
+                                <th style="width:20%" class="text-end">Jumlah</th>
+                                <th style="width:10%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($danaKeluar as $item)
+                            <tr>
+                                <td>{{ ($danaKeluar->currentPage()-1)*$danaKeluar->perPage()+$loop->iteration }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->tanggal->format('d M Y') }}</div>
+                                    <div class="text-muted small">{{ $item->tanggal->translatedFormat('l') }}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->keperluan }}</div>
+                                    @if($item->keterangan)
+                                        <div class="text-muted small">{{ Str::limit($item->keterangan, 60) }}</div>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge-keluar">- Rp {{ number_format((float)$item->jumlah,0,',','.') }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-warning me-1"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditKeluar{{ $item->id }}"
+                                            title="Edit"><i class="bi bi-pencil"></i></button>
+                                    <form action="{{ route('admin.infaq.pengeluaran.destroy', $item->id) }}" method="POST" class="d-inline"
+                                          onsubmit="return confirm('Hapus data ini?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">{{ $danaKeluar->appends(request()->query())->links() }}</div>
+            @else
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox display-4 d-block mb-2 opacity-50"></i>
+                    <p>Belum ada data dana keluar</p>
+                </div>
+            @endif
         </div>
-    @else
-        <div class="card no-data-message" style="border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
-            <i class="bi bi-inbox" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
-            <p>Belum ada data infaq dana</p>
-        </div>
-    @endif
+    </div>
 </div>
 
-{{-- ADD MODAL --}}
-<div class="modal fade" id="addInfaqModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog">
+{{-- MODAL TAMBAH DANA MASUK --}}
+<div class="modal fade" id="modalTambahMasuk" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Tambah Data Infaq</h5>
+                <h5 class="modal-title"><i class="bi bi-arrow-down-circle me-2"></i>Tambah Dana Masuk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form action="{{ route('admin.infaq.dana.store') }}" method="POST">
-                    @csrf
-
+            <form action="{{ route('admin.infaq.dana.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-600">Judul</label>
-                        <input type="text" name="judul" class="form-control" required placeholder="Contoh: Infaq Pembangunan">
+                        <label class="form-label fw-semibold">Sumber / Keterangan Dana <span class="text-danger">*</span></label>
+                        <input type="text" name="judul" class="form-control" required
+                               placeholder="Contoh: Infaq Jum'at, Donasi Pembangunan">
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-600">Jumlah (Rp)</label>
-                        <input type="number" name="jumlah" class="form-control" step="0.01" required placeholder="0">
+                        <label class="form-label fw-semibold">Jumlah (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="jumlah" class="form-control" required min="1"
+                               placeholder="Contoh: 500000">
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-600">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" required value="{{ now()->format('Y-m-d') }}">
+                        <label class="form-label fw-semibold">Tanggal Masuk <span class="text-danger">*</span></label>
+                        <div class="input-group"><span class="input-group-text bg-primary text-white"><i class="bi bi-calendar3"></i></span><input type="date" name="tanggal" class="form-control" required value="{{ now()->format('Y-m-d') }}"></div><div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-600">Keterangan</label>
-                        <textarea name="keterangan" class="form-control" rows="3" placeholder="Catatan tambahan (opsional)"></textarea>
+                        <label class="form-label fw-semibold">Catatan Tambahan <span class="text-muted small">(opsional)</span></label>
+                        <textarea name="keterangan" class="form-control" rows="2"
+                                  placeholder="Catatan tambahan jika ada"></textarea>
                     </div>
-
-                    <div class="modal-footer border-0 pt-3">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary-custom">Simpan</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary-custom"><i class="bi bi-check-lg me-1"></i>Simpan</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-{{-- EDIT MODALS --}}
-@foreach($dana as $item)
-    <div class="modal fade" id="editInfaqModal{{ $item->id }}" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Data Infaq</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="{{ route('admin.infaq.dana.update', $item->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        <div class="mb-3">
-                            <label class="form-label fw-600">Judul</label>
-                            <input type="text" name="judul" class="form-control" required value="{{ $item->judul }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-600">Jumlah (Rp)</label>
-                            <input type="number" name="jumlah" class="form-control" step="0.01" required value="{{ $item->jumlah }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-600">Tanggal</label>
-                            <input type="date" name="tanggal" class="form-control" required value="{{ $item->tanggal->format('Y-m-d') }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-600">Keterangan</label>
-                            <textarea name="keterangan" class="form-control" rows="3">{{ $item->keterangan }}</textarea>
-                        </div>
-
-                        <div class="modal-footer border-0 pt-3">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary-custom">Simpan Perubahan</button>
-                        </div>
-                    </form>
-                </div>
+{{-- MODAL TAMBAH DANA KELUAR --}}
+<div class="modal fade" id="modalTambahKeluar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#7f1d1d,#dc2626);">
+                <h5 class="modal-title"><i class="bi bi-arrow-up-circle me-2"></i>Tambah Dana Keluar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form action="{{ route('admin.infaq.pengeluaran.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Digunakan Untuk <span class="text-danger">*</span></label>
+                        <input type="text" name="keperluan" class="form-control" required
+                               placeholder="Contoh: Perbaikan Atap Masjid, Beli Karpet">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jumlah (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="jumlah" class="form-control" required min="1"
+                               placeholder="Contoh: 1500000">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tanggal Pengeluaran <span class="text-danger">*</span></label>
+                        <div class="input-group"><span class="input-group-text bg-primary text-white"><i class="bi bi-calendar3"></i></span><input type="date" name="tanggal" class="form-control" required value="{{ now()->format('Y-m-d') }}"></div><div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Keterangan Tambahan <span class="text-muted small">(opsional)</span></label>
+                        <textarea name="keterangan" class="form-control" rows="2"
+                                  placeholder="Detail penggunaan dana"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger" style="border-radius:8px;font-weight:600;">
+                        <i class="bi bi-check-lg me-1"></i>Simpan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+{{-- MODAL EDIT DANA MASUK --}}
+@foreach($danaMasuk as $item)
+<div class="modal fade" id="modalEditMasuk{{ $item->id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Dana Masuk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('admin.infaq.dana.update', $item->id) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sumber / Keterangan Dana</label>
+                        <input type="text" name="judul" class="form-control" required value="{{ $item->judul }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jumlah (Rp)</label>
+                        <input type="number" name="jumlah" class="form-control" required min="1" value="{{ $item->jumlah }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tanggal Masuk</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-primary text-white"><i class="bi bi-calendar3"></i></span>
+                            <input type="date" name="tanggal" class="form-control" required value="{{ $item->tanggal->format('Y-m-d') }}">
+                        </div>
+                        <div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Catatan Tambahan</label>
+                        <textarea name="keterangan" class="form-control" rows="2">{{ $item->keterangan }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary-custom"><i class="bi bi-check-lg me-1"></i>Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endforeach
 
+{{-- MODAL EDIT DANA KELUAR --}}
+@foreach($danaKeluar as $item)
+<div class="modal fade" id="modalEditKeluar{{ $item->id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#7f1d1d,#dc2626);">
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Dana Keluar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('admin.infaq.pengeluaran.update', $item->id) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Digunakan Untuk</label>
+                        <input type="text" name="keperluan" class="form-control" required value="{{ $item->keperluan }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jumlah (Rp)</label>
+                        <input type="number" name="jumlah" class="form-control" required min="1" value="{{ $item->jumlah }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tanggal Pengeluaran</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-danger text-white"><i class="bi bi-calendar3"></i></span>
+                            <input type="date" name="tanggal" class="form-control" required value="{{ $item->tanggal->format('Y-m-d') }}">
+                        </div>
+                        <div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Keterangan Tambahan</label>
+                        <textarea name="keterangan" class="form-control" rows="2">{{ $item->keterangan }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger" style="border-radius:8px;font-weight:600;">
+                        <i class="bi bi-check-lg me-1"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
+@push('scripts')
+<script>
+// Buka tab yang sesuai jika ada hash di URL
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.location.hash === '#keluar') {
+        const tab = document.getElementById('keluar-tab');
+        if (tab) new bootstrap.Tab(tab).show();
+    }
+    // Auto dismiss alerts
+    document.querySelectorAll('.alert-custom').forEach(el => {
+        setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 4000);
+    });
+});
+</script>
+@endpush
 @endsection

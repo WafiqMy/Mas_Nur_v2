@@ -12,12 +12,7 @@
     $isLoggedIn  = !empty($sessionUser);
     $BASE_IMG    = config('app.api_base_url');
 
-    $gambar = $barang['gambar'] ?? '';
-    if ($gambar && $gambar !== 'default.png' && !str_starts_with($gambar, 'http')) {
-        $gambar = $BASE_IMG . '/uploads/persewaan/' . $gambar;
-    } elseif (!$gambar || $gambar === 'default.png') {
-        $gambar = 'https://via.placeholder.com/400x300?text=No+Image';
-    }
+    $gambar = $barang->gambar_url;
 
     $idBarang   = $barang['id_persewaan'] ?? $barang['id'] ?? 0;
     $namaBarang = $barang['nama_barang'] ?? '';
@@ -95,8 +90,9 @@
             </div>
 
             {{-- Form Reservasi --}}
-            @if($isLoggedIn)
+            @if($isLoggedIn && strtolower($sessionUser['role'] ?? '') !== 'admin')
             <div class="card border-0 shadow-sm rounded-3 p-4">
+                {{-- form reservasi --}}
                 <h6 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Buat Reservasi</h6>
 
                 <form action="{{ route('reservasi.store') }}" method="POST">
@@ -105,17 +101,48 @@
                     <input type="hidden" name="nama_barang" value="{{ $namaBarang }}">
                     <input type="hidden" name="jenis" value="{{ $jenis }}">
                     <input type="hidden" name="harga_satuan" value="{{ $harga }}">
+                    <input type="hidden" name="total_harga" id="inputTotalHarga" value="0">
+
+                    {{-- Data Pemesan (dari session) --}}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small">Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_pengguna" class="form-control"
+                                   value="{{ $sessionUser['nama'] ?? '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">No. WhatsApp <span class="text-danger">*</span></label>
+                            <input type="text" name="no_tlp_pengguna" class="form-control"
+                                   value="{{ $sessionUser['no_telpon'] ?? '' }}"
+                                   placeholder="08xxxxxxxxxx" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email_pengguna" class="form-control"
+                                   value="{{ $sessionUser['email'] ?? '' }}" required>
+                        </div>
+                    </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Tanggal Mulai <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_mulai_reservasi" class="form-control"
-                                   min="{{ date('Y-m-d') }}" required id="tglMulai">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" name="tanggal_mulai_reservasi" class="form-control"
+                                       min="{{ date('Y-m-d') }}" required id="tglMulai"
+                                       placeholder="Pilih tanggal mulai">
+                            </div>
+                            <div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Tanggal Selesai <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_selesai_reservasi" class="form-control"
-                                   min="{{ date('Y-m-d') }}" required id="tglSelesai">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" name="tanggal_selesai_reservasi" class="form-control"
+                                       min="{{ date('Y-m-d') }}" required id="tglSelesai"
+                                       placeholder="Pilih tanggal selesai">
+                            </div>
+                            <div class="date-helper"><i class="bi bi-info-circle me-1"></i>Klik untuk memilih tanggal</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Jumlah Unit <span class="text-danger">*</span></label>
@@ -139,6 +166,19 @@
                         <i class="bi bi-send me-2"></i>Kirim Permintaan Reservasi
                     </button>
                 </form>
+            </div>
+            @elseif($isLoggedIn && strtolower($sessionUser['role'] ?? '') === 'admin')
+            <div class="card border-0 shadow-sm rounded-3 p-4 text-center"
+                 style="background:#f0f9ff;border:1.5px solid #bae6fd !important;">
+                <i class="bi bi-shield-check display-4 text-primary opacity-75 mb-3"></i>
+                <h6 class="fw-bold text-primary">Mode Admin</h6>
+                <p class="text-muted small mb-3">
+                    Admin tidak dapat membuat reservasi. Gunakan menu
+                    <strong>Permintaan Sewa</strong> untuk mengelola reservasi dari pengguna.
+                </p>
+                <a href="{{ route('admin.reservasi.permintaan') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-clipboard-check me-1"></i>Lihat Permintaan Sewa
+                </a>
             </div>
             @else
             <div class="card border-0 shadow-sm rounded-3 p-4 text-center">
@@ -193,6 +233,9 @@
             const total = hargaSatuan * jumlah * hari;
             document.getElementById('estimasiHarga').textContent =
                 'Rp ' + total.toLocaleString('id-ID');
+            // Update hidden input total_harga
+            const inputHarga = document.getElementById('inputTotalHarga');
+            if (inputHarga) inputHarga.value = total;
         }
     }
 

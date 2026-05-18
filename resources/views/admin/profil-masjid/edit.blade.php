@@ -8,6 +8,8 @@
     $gambarSejarah = $profil['gambar_sejarah_masjid'] ?? $profil['gambar_sejarah'] ?? '';
     if ($gambarSejarah && !str_starts_with($gambarSejarah, 'http')) {
         $gambarSejarah = $BASE_IMG . '/uploads/profil_masjid/' . $gambarSejarah;
+    } elseif ($gambarSejarah && str_starts_with($gambarSejarah, 'http') && !str_contains($gambarSejarah, '/uploads/')) {
+        $gambarSejarah = $BASE_IMG . '/uploads/profil_masjid/' . basename($gambarSejarah);
     }
 @endphp
 
@@ -32,12 +34,26 @@
             @csrf @method('PUT')
 
             <div class="mb-3">
+                <label class="form-label fw-semibold">Nomor WhatsApp Admin</label>
+                <div class="input-group">
+                    <span class="input-group-text" style="background:#25d366;color:white;border-color:#25d366;">
+                        <i class="bi bi-whatsapp"></i>
+                    </span>
+                    <input type="text" name="whatsapp"
+                           class="form-control @error('whatsapp') is-invalid @enderror"
+                           value="{{ old('whatsapp', $profil->whatsapp ?? '') }}"
+                           placeholder="Contoh: 6285808441941 atau 08580...">
+                    @error('whatsapp') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <small class="text-muted">Nomor ini digunakan di seluruh website untuk tombol "Chat WhatsApp". Format: 628xxx atau 08xxx</small>
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label fw-semibold">Judul Sejarah <span class="text-danger">*</span></label>
                 <input type="text" name="judul_sejarah" class="form-control @error('judul_sejarah') is-invalid @enderror"
                        value="{{ old('judul_sejarah', $profil['judul_sejarah'] ?? 'Sejarah Masjid') }}" required>
                 @error('judul_sejarah') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold">Deskripsi Sejarah <span class="text-danger">*</span></label>
                 <textarea name="deskripsi_sejarah" class="form-control @error('deskripsi_sejarah') is-invalid @enderror"

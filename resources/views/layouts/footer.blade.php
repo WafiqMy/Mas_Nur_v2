@@ -172,7 +172,7 @@
                        aria-label="TikTok">
                         <i class="bi bi-tiktok"></i>
                     </a>
-                    <a href="{{ config('masjid.sosial.whatsapp') }}" 
+                    <a href="{{ $waUrl }}" 
                        target="_blank" rel="noopener noreferrer"
                        class="social-btn" 
                        aria-label="WhatsApp">

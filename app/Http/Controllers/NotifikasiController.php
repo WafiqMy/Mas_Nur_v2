@@ -2,19 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\NotifikasiHelper;
-use App\Services\ApiService;
+use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Session;
 
 class NotifikasiController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     public function index()
     {
         $user = Session::get('user');
@@ -22,17 +14,14 @@ class NotifikasiController extends Controller
             return redirect()->route('login');
         }
 
-        $response   = $this->api->getNotifikasi($user['username'], $user['role']);
-        $notifikasi = $response['data'] ?? [];
+        $notifikasi = Notifikasi::where('username', $user['username'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        // Process setiap notifikasi untuk fix link
-        $notifikasi = array_map(function ($n) {
-            // Convert legacy link ke format baru
-            if (isset($n['link'])) {
-                $n['link'] = NotifikasiHelper::convertLegacyLink($n['link']);
-            }
-            return $n;
-        }, $notifikasi);
+        // Mark semua sebagai sudah dibaca
+        Notifikasi::where('username', $user['username'])
+            ->where('is_new', true)
+            ->update(['is_new' => false]);
 
         return view('notifikasi.index', compact('notifikasi'));
     }
@@ -44,11 +33,9 @@ class NotifikasiController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        $response   = $this->api->getNotifikasi($user['username'], $user['role']);
-        $notifikasi = $response['data'] ?? [];
-
-        // Hitung yang is_new = true
-        $count = count(array_filter($notifikasi, fn($n) => !empty($n['is_new'])));
+        $count = Notifikasi::where('username', $user['username'])
+            ->where('is_new', true)
+            ->count();
 
         return response()->json(['count' => $count]);
     }

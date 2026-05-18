@@ -9,9 +9,13 @@
     $gambarRemas = $struktur['gambar_struktur_remas_url'] ?? $struktur['gambar_struktur_remas'] ?? '';
     if ($gambarOrg && !str_starts_with($gambarOrg, 'http')) {
         $gambarOrg = $BASE_IMG . '/uploads/profil_masjid/' . $gambarOrg;
+    } elseif ($gambarOrg && str_starts_with($gambarOrg, 'http') && !str_contains($gambarOrg, '/uploads/')) {
+        $gambarOrg = $BASE_IMG . '/uploads/profil_masjid/' . basename($gambarOrg);
     }
     if ($gambarRemas && !str_starts_with($gambarRemas, 'http')) {
         $gambarRemas = $BASE_IMG . '/uploads/profil_masjid/' . $gambarRemas;
+    } elseif ($gambarRemas && str_starts_with($gambarRemas, 'http') && !str_contains($gambarRemas, '/uploads/')) {
+        $gambarRemas = $BASE_IMG . '/uploads/profil_masjid/' . basename($gambarRemas);
     }
 @endphp
 

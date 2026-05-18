@@ -39,6 +39,8 @@
                     $gambar = $b['gambar'] ?? '';
                     if ($gambar && $gambar !== 'default.png' && !str_starts_with($gambar, 'http')) {
                         $gambar = $BASE_IMG . '/uploads/persewaan/' . $gambar;
+                    } elseif ($gambar && $gambar !== 'default.png' && str_starts_with($gambar, 'http') && !str_contains($gambar, '/uploads/')) {
+                        $gambar = $BASE_IMG . '/uploads/persewaan/' . basename($gambar);
                     } elseif (!$gambar || $gambar === 'default.png') {
                         $gambar = 'https://via.placeholder.com/60?text=N/A';
                     }

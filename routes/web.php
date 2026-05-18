@@ -13,6 +13,8 @@ use App\Http\Controllers\InfaqController;
 use App\Http\Controllers\FoodCourtController;
 use App\Http\Controllers\Admin\InfaqDanaController;
 use App\Http\Controllers\Admin\InfaqRekeningController;
+use App\Http\Controllers\Admin\PublikasiController;
+use App\Http\Controllers\PublikasiPageController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\OtpController;
@@ -36,6 +38,9 @@ Route::get('/reservasi/barang/{id}', [PersewaanController::class, 'show'])->name
 Route::get('/infaq', [InfaqController::class, 'index'])->name('infaq.index');
 
 Route::get('/food-court', [FoodCourtController::class, 'index'])->name('food-court.index');
+
+// Website Publikasi (terpisah, bisa diakses siapa saja via /publikasi)
+Route::get('/publikasi', [PublikasiPageController::class, 'index'])->name('publikasi.page');
 
 // ===================== AUTH =====================
 
@@ -100,7 +105,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     // Permintaan Reservasi
     Route::get('/reservasi/permintaan', [ReservasiController::class, 'permintaan'])->name('reservasi.permintaan');
     Route::get('/reservasi/permintaan/{id}', [ReservasiController::class, 'detailPermintaan'])->name('reservasi.detail-permintaan');
-    Route::put('/reservasi/permintaan/{id}', [ReservasiController::class, 'updateStatus'])->name('reservasi.update-status');
+    Route::post('/reservasi/permintaan/{id}', [ReservasiController::class, 'updateStatus'])->name('reservasi.update-status');
 
     // Profil Masjid
     Route::get('/profil-masjid', [ProfilMasjidController::class, 'edit'])->name('profil-masjid.edit');
@@ -114,13 +119,25 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::put('/food-court/{foodCourt}', [FoodCourtController::class, 'update'])->name('food-court.update');
     Route::delete('/food-court/{foodCourt}', [FoodCourtController::class, 'destroy'])->name('food-court.destroy');
 
+    // Publikasi
+    Route::get('/publikasi', [PublikasiController::class, 'index'])->name('publikasi.index');
+    Route::post('/publikasi', [PublikasiController::class, 'store'])->name('publikasi.store');
+    Route::put('/publikasi/{publikasi}', [PublikasiController::class, 'update'])->name('publikasi.update');
+    Route::delete('/publikasi/{publikasi}', [PublikasiController::class, 'destroy'])->name('publikasi.destroy');
+    Route::patch('/publikasi/{publikasi}/toggle', [PublikasiController::class, 'toggleActive'])->name('publikasi.toggle');
+
     // Infaq
     Route::prefix('infaq')->name('infaq.')->group(function () {
-        // Infaq Dana
+        // Infaq Dana Masuk
         Route::get('/dana', [InfaqDanaController::class, 'index'])->name('dana.index');
         Route::post('/dana', [InfaqDanaController::class, 'store'])->name('dana.store');
         Route::put('/dana/{dana}', [InfaqDanaController::class, 'update'])->name('dana.update');
         Route::delete('/dana/{dana}', [InfaqDanaController::class, 'destroy'])->name('dana.destroy');
+
+        // Infaq Dana Keluar (Pengeluaran)
+        Route::post('/pengeluaran', [InfaqDanaController::class, 'storePengeluaran'])->name('pengeluaran.store');
+        Route::put('/pengeluaran/{pengeluaran}', [InfaqDanaController::class, 'updatePengeluaran'])->name('pengeluaran.update');
+        Route::delete('/pengeluaran/{pengeluaran}', [InfaqDanaController::class, 'destroyPengeluaran'])->name('pengeluaran.destroy');
 
         // Infaq Rekening
         Route::get('/rekening', [InfaqRekeningController::class, 'index'])->name('rekening.index');

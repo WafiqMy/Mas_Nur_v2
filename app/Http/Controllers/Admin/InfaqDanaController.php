@@ -4,90 +4,133 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InfaqDana;
+use App\Models\InfaqPengeluaran;
 use Illuminate\Http\Request;
 
 class InfaqDanaController extends Controller
 {
-    /**
-     * Constructor - apply admin middleware
-     */
     public function __construct()
     {
         $this->middleware('admin');
     }
 
-    /**
-     * Display list of infaq dana entries
-     */
     public function index(Request $request)
     {
-        $query = InfaqDana::query();
+        // Filter bulan/tahun
+        $bulan = $request->filled('bulan') ? (int) $request->bulan : null;
+        $tahun = $request->filled('tahun') ? (int) $request->tahun : null;
 
-        // Date filter
-        if ($request->filled('bulan') && $request->filled('tahun')) {
-            $bulan = (int) $request->bulan;
-            $tahun = (int) $request->tahun;
-            $query->whereYear('tanggal', $tahun)
-                  ->whereMonth('tanggal', $bulan);
+        // Query dana masuk
+        $queryMasuk = InfaqDana::query();
+        if ($bulan && $tahun) {
+            $queryMasuk->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan);
         }
+        $danaMasuk = $queryMasuk->orderBy('tanggal', 'desc')->paginate(10, ['*'], 'masuk');
 
-        $dana = $query->orderBy('tanggal', 'desc')->paginate(15);
-        $totalBulanIni = InfaqDana::getTotalByMonth(now()->month, now()->year);
-        $totalKeseluruhan = InfaqDana::getTotalAll();
-        $jumlahTransaksi = InfaqDana::count();
+        // Query dana keluar
+        $queryKeluar = InfaqPengeluaran::query();
+        if ($bulan && $tahun) {
+            $queryKeluar->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan);
+        }
+        $danaKeluar = $queryKeluar->orderBy('tanggal', 'desc')->paginate(10, ['*'], 'keluar');
+
+        // Ringkasan
+        $totalMasuk       = InfaqDana::getTotalAll();
+        $totalKeluar      = InfaqPengeluaran::getTotalAll();
+        $saldo            = $totalMasuk - $totalKeluar;
+        $totalMasukBulan  = InfaqDana::getTotalByMonth(now()->month, now()->year);
+        $totalKeluarBulan = InfaqPengeluaran::getTotalByMonth(now()->month, now()->year);
 
         return view('admin.infaq.dana.index', compact(
-            'dana',
-            'totalBulanIni',
-            'totalKeseluruhan',
-            'jumlahTransaksi'
+            'danaMasuk',
+            'danaKeluar',
+            'totalMasuk',
+            'totalKeluar',
+            'saldo',
+            'totalMasukBulan',
+            'totalKeluarBulan',
+            'bulan',
+            'tahun'
         ));
     }
 
-    /**
-     * Store a newly created infaq dana entry
-     */
+    // ===== DANA MASUK =====
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'jumlah' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string|max:1000',
-            'tanggal' => 'required|date',
+        $request->validate([
+            'judul'      => 'required|string|max:255',
+            'jumlah'     => 'required|numeric|min:1',
+            'keterangan' => 'nullable|string|max:500',
+            'tanggal'    => 'required|date',
         ]);
 
-        InfaqDana::create($validated);
+        InfaqDana::create($request->only('judul', 'jumlah', 'keterangan', 'tanggal'));
 
         return redirect()->route('admin.infaq.dana.index')
-                        ->with('success', 'Data infaq dana berhasil ditambahkan.');
+            ->with('success', 'Dana masuk berhasil ditambahkan.');
     }
 
-    /**
-     * Update the specified infaq dana entry
-     */
     public function update(Request $request, InfaqDana $dana)
     {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'jumlah' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string|max:1000',
-            'tanggal' => 'required|date',
+        $request->validate([
+            'judul'      => 'required|string|max:255',
+            'jumlah'     => 'required|numeric|min:1',
+            'keterangan' => 'nullable|string|max:500',
+            'tanggal'    => 'required|date',
         ]);
 
-        $dana->update($validated);
+        $dana->update($request->only('judul', 'jumlah', 'keterangan', 'tanggal'));
 
         return redirect()->route('admin.infaq.dana.index')
-                        ->with('success', 'Data infaq dana berhasil diperbarui.');
+            ->with('success', 'Dana masuk berhasil diperbarui.');
     }
 
-    /**
-     * Delete the specified infaq dana entry
-     */
     public function destroy(InfaqDana $dana)
     {
         $dana->delete();
 
         return redirect()->route('admin.infaq.dana.index')
-                        ->with('success', 'Data infaq dana berhasil dihapus.');
+            ->with('success', 'Data dana masuk berhasil dihapus.');
+    }
+
+    // ===== DANA KELUAR =====
+
+    public function storePengeluaran(Request $request)
+    {
+        $request->validate([
+            'keperluan'  => 'required|string|max:255',
+            'jumlah'     => 'required|numeric|min:1',
+            'keterangan' => 'nullable|string|max:500',
+            'tanggal'    => 'required|date',
+        ]);
+
+        InfaqPengeluaran::create($request->only('keperluan', 'jumlah', 'keterangan', 'tanggal'));
+
+        return redirect()->route('admin.infaq.dana.index')
+            ->with('success', 'Laporan pengeluaran berhasil ditambahkan.');
+    }
+
+    public function updatePengeluaran(Request $request, InfaqPengeluaran $pengeluaran)
+    {
+        $request->validate([
+            'keperluan'  => 'required|string|max:255',
+            'jumlah'     => 'required|numeric|min:1',
+            'keterangan' => 'nullable|string|max:500',
+            'tanggal'    => 'required|date',
+        ]);
+
+        $pengeluaran->update($request->only('keperluan', 'jumlah', 'keterangan', 'tanggal'));
+
+        return redirect()->route('admin.infaq.dana.index')
+            ->with('success', 'Laporan pengeluaran berhasil diperbarui.');
+    }
+
+    public function destroyPengeluaran(InfaqPengeluaran $pengeluaran)
+    {
+        $pengeluaran->delete();
+
+        return redirect()->route('admin.infaq.dana.index')
+            ->with('success', 'Data pengeluaran berhasil dihapus.');
     }
 }

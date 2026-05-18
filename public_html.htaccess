@@ -1,0 +1,6 @@
+Options -MultiViews -Indexes
+RewriteEngine On
+
+# Arahkan semua request ke folder public Laravel
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L,QSA]

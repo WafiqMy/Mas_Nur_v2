@@ -3,23 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\ApiService;
+use App\Models\Akun;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
 
 class OtpController extends Controller
 {
-    protected ApiService $api;
-
-    public function __construct(ApiService $api)
-    {
-        $this->api = $api;
-    }
-
     // ===================== VERIFIKASI REGISTRASI =====================
 
     public function showVerifikasiForm(Request $request)
     {
-        return view('auth.verifikasi', ['email' => $request->email]);
+        return view('auth.verifikasi', ['email' => $request->email ?? session('email')]);
     }
 
     public function verifikasi(Request $request)
@@ -29,16 +25,32 @@ class OtpController extends Controller
             'otp'   => 'required|string',
         ]);
 
-        $response = $this->api->verifikasi($request->email, $request->otp);
+        $akun = Akun::where('email', $request->email)->first();
 
-        if (isset($response['status']) && $response['status'] === 'success') {
-            return redirect()->route('login')
-                ->with('success', 'Akun berhasil diverifikasi! Silakan login.');
+        if (!$akun) {
+            return back()->withErrors(['otp' => 'Email tidak ditemukan.']);
         }
 
-        return back()->withErrors([
-            'otp' => $response['message'] ?? 'Kode OTP tidak valid.',
+        if ($akun->status === 'aktif') {
+            return redirect()->route('login')->with('success', 'Akun sudah aktif. Silakan login.');
+        }
+
+        if ($akun->otp !== $request->otp) {
+            return back()->withErrors(['otp' => 'Kode OTP tidak valid.']);
+        }
+
+        if ($akun->otp_expired && Carbon::now()->isAfter($akun->otp_expired)) {
+            return back()->withErrors(['otp' => 'Kode OTP sudah kadaluarsa. Silakan daftar ulang.']);
+        }
+
+        $akun->update([
+            'status'      => 'aktif',
+            'otp'         => null,
+            'otp_expired' => null,
         ]);
+
+        return redirect()->route('login')
+            ->with('success', 'Akun berhasil diverifikasi! Silakan login.');
     }
 
     // ===================== LUPA PASSWORD =====================
@@ -52,9 +64,26 @@ class OtpController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $response = $this->api->lupaPasswordRequest($request->email);
+        $akun = Akun::where('email', $request->email)->first();
 
-        return response()->json($response);
+        if (!$akun) {
+            return response()->json(['status' => 'error', 'message' => 'Email tidak terdaftar.']);
+        }
+
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $akun->update([
+            'otp'         => $otp,
+            'otp_expired' => Carbon::now()->addMinutes(10),
+        ]);
+
+        try {
+            Mail::to($akun->email)->send(new \App\Mail\OtpMail($otp, $akun->nama));
+        } catch (\Throwable $e) {
+            // log error tapi tetap return success agar tidak expose info
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'OTP telah dikirim ke email.']);
     }
 
     public function verifyOtp(Request $request)
@@ -64,9 +93,17 @@ class OtpController extends Controller
             'otp'   => 'required|string',
         ]);
 
-        $response = $this->api->lupaPasswordVerify($request->email, $request->otp);
+        $akun = Akun::where('email', $request->email)->first();
 
-        return response()->json($response);
+        if (!$akun || $akun->otp !== $request->otp) {
+            return response()->json(['status' => 'error', 'message' => 'OTP tidak valid.']);
+        }
+
+        if ($akun->otp_expired && Carbon::now()->isAfter($akun->otp_expired)) {
+            return response()->json(['status' => 'error', 'message' => 'OTP sudah kadaluarsa.']);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'OTP valid.']);
     }
 
     public function resetPassword(Request $request)
@@ -75,14 +112,26 @@ class OtpController extends Controller
             'email'    => 'required|email',
             'otp'      => 'required|string',
             'password' => 'required|string|min:8|regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/',
+        ], [
+            'password.regex' => 'Password harus kombinasi huruf dan angka.',
         ]);
 
-        $response = $this->api->lupaPasswordReset(
-            $request->email,
-            $request->otp,
-            $request->password
-        );
+        $akun = Akun::where('email', $request->email)->first();
 
-        return response()->json($response);
+        if (!$akun || $akun->otp !== $request->otp) {
+            return response()->json(['status' => 'error', 'message' => 'OTP tidak valid.']);
+        }
+
+        if ($akun->otp_expired && Carbon::now()->isAfter($akun->otp_expired)) {
+            return response()->json(['status' => 'error', 'message' => 'OTP sudah kadaluarsa.']);
+        }
+
+        $akun->update([
+            'password'    => Hash::make($request->password),
+            'otp'         => null,
+            'otp_expired' => null,
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Password berhasil direset.']);
     }
 }

@@ -1,73 +1,137 @@
 @extends('layouts.app')
-
 @section('title', 'Permintaan Reservasi - Admin')
 
+@push('styles')
+<style>
+.res-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    color: white; padding: 2rem; border-radius: 14px; margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.2);
+}
+.res-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem; }
+
+.res-tabs .nav-link {
+    border-radius: 10px 10px 0 0; font-weight: 600; color: #6b7280;
+    border: none; padding: 0.7rem 1.5rem;
+}
+.res-tabs .nav-link.active { background: white; color: #2563eb; border-bottom: 3px solid #2563eb; }
+
+.res-card {
+    background: white; border-radius: 12px; padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07); margin-bottom: 0.75rem;
+    border-left: 5px solid #ffc107;
+    transition: box-shadow 0.2s;
+}
+.res-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.res-card.disetujui { border-left-color: #198754; }
+.res-card.ditolak   { border-left-color: #dc3545; }
+.res-card.batal     { border-left-color: #6c757d; }
+.res-card.menunggu  { border-left-color: #ffc107; }
+
+.badge-status { padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+</style>
+@endpush
+
 @section('content')
-<div class="bg-light py-4 border-bottom mb-4">
-    <div class="container">
-        <h2 class="fw-bold mb-1">Daftar Permintaan Masuk</h2>
-        <p class="text-muted mb-0">Kelola persetujuan peminjaman fasilitas masjid</p>
-    </div>
-</div>
+<div class="container-fluid py-4">
 
-<div class="container mb-5">
-    @if(!empty($permintaan))
-    <div class="d-flex flex-column gap-3">
-        @foreach($permintaan as $r)
-        @php
-            // Data bisa dari extendedProps (format kalender) atau langsung
-            $props = $r['extendedProps'] ?? $r;
-            $status = $props['status'] ?? $r['status_reservasi'] ?? 'Menunggu';
-            $statusLower = strtolower($status);
-            $badgeClass = 'bg-warning text-dark';
-            if (str_contains($statusLower, 'setuju')) $badgeClass = 'bg-success';
-            elseif (str_contains($statusLower, 'tolak') || str_contains($statusLower, 'batal')) $badgeClass = 'bg-danger';
-
-            $namaBarang   = $r['nama_barang'] ?? ($props['barang'] ?? '-');
-            $namaPeminjam = $r['nama_pengguna'] ?? ($props['peminjam'] ?? '-');
-            $telepon      = $r['no_tlp_pengguna'] ?? ($props['telepon'] ?? '-');
-            $tglMulai     = $r['tanggal_mulai_reservasi'] ?? ($r['start'] ?? '-');
-            $idReservasi  = $r['id_reservasi'] ?? ($r['id'] ?? 0);
-        @endphp
-        <div class="card border-0 shadow-sm rounded-3 p-4"
-             style="border-left: 5px solid #1b6b6a !important;">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="fw-bold mb-0">
-                            {{ $namaBarang }}
-                            <small class="text-muted fw-normal">({{ $namaPeminjam }})</small>
-                        </h5>
-                        <span class="badge {{ $badgeClass }} ms-2">{{ strtoupper($status) }}</span>
-                    </div>
-                    <div class="row text-muted small">
-                        <div class="col-md-4 mb-1">
-                            <i class="bi bi-calendar-check me-1 text-primary"></i>
-                            {{ $tglMulai !== '-' ? date('d F Y', strtotime($tglMulai)) : '-' }}
-                        </div>
-                        <div class="col-md-4 mb-1">
-                            <i class="bi bi-person-circle me-1 text-primary"></i>{{ $namaPeminjam }}
-                        </div>
-                        <div class="col-md-4">
-                            <i class="bi bi-telephone me-1 text-primary"></i>{{ $telepon }}
-                        </div>
-                    </div>
-                </div>
-                <div class="ms-md-4">
-                    <a href="{{ route('admin.reservasi.detail-permintaan', $idReservasi) }}"
-                       class="btn btn-success fw-bold">
-                        Lihat Detail <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-    @else
-    <div class="text-center py-5">
-        <i class="bi bi-inbox display-1 text-muted opacity-25"></i>
-        <p class="text-muted mt-3">Belum ada permintaan pemesanan yang masuk.</p>
+    @if(session('success'))
+    <div class="alert alert-success border-0 rounded-3 mb-3">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
     </div>
     @endif
+
+    <div class="res-header">
+        <h1><i class="bi bi-clipboard-check me-2"></i>Permintaan Reservasi</h1>
+        <p style="opacity:0.9;margin:0;">Kelola persetujuan peminjaman fasilitas masjid</p>
+    </div>
+
+    {{-- Ringkasan --}}
+    <div class="row g-3 mb-4">
+        @php
+            $menunggu   = $permintaan->where('status_reservasi', 'Menunggu')->count();
+            $disetujui  = $permintaan->where('status_reservasi', 'Disetujui')->count();
+            $ditolak    = $permintaan->whereIn('status_reservasi', ['Ditolak','Batal'])->count();
+        @endphp
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-3 shadow-sm text-center p-3">
+                <div style="font-size:1.8rem;font-weight:800;color:#ffc107;">{{ $menunggu }}</div>
+                <div class="text-muted small">Menunggu</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-3 shadow-sm text-center p-3">
+                <div style="font-size:1.8rem;font-weight:800;color:#198754;">{{ $disetujui }}</div>
+                <div class="text-muted small">Disetujui</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-3 shadow-sm text-center p-3">
+                <div style="font-size:1.8rem;font-weight:800;color:#dc3545;">{{ $ditolak }}</div>
+                <div class="text-muted small">Ditolak / Batal</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-3 shadow-sm text-center p-3">
+                <div style="font-size:1.8rem;font-weight:800;color:#2563eb;">{{ $permintaan->count() }}</div>
+                <div class="text-muted small">Total</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Tabs --}}
+    <ul class="nav res-tabs border-bottom mb-0" id="resTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#tab-masuk">
+                <i class="bi bi-inbox me-1"></i>Permintaan Masuk
+                @if($menunggu > 0)
+                    <span class="badge bg-warning text-dark ms-1">{{ $menunggu }}</span>
+                @endif
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#tab-riwayat">
+                <i class="bi bi-clock-history me-1"></i>Riwayat
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content bg-white rounded-bottom p-3" style="box-shadow:0 4px 15px rgba(0,0,0,0.07);">
+
+        {{-- TAB PERMINTAAN MASUK --}}
+        <div class="tab-pane fade show active" id="tab-masuk">
+            <div class="pt-2">
+                @php $masuk = $permintaan->where('status_reservasi', 'Menunggu'); @endphp
+                @if($masuk->count() > 0)
+                    @foreach($masuk as $r)
+                    @include('admin.reservasi._card-permintaan', ['r' => $r])
+                    @endforeach
+                @else
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox display-4 d-block mb-2 opacity-50"></i>
+                    <p>Tidak ada permintaan yang menunggu.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- TAB RIWAYAT --}}
+        <div class="tab-pane fade" id="tab-riwayat">
+            <div class="pt-2">
+                @php $selesai = $permintaan->whereNotIn('status_reservasi', ['Menunggu']); @endphp
+                @if($selesai->count() > 0)
+                    @foreach($selesai as $r)
+                    @include('admin.reservasi._card-permintaan', ['r' => $r])
+                    @endforeach
+                @else
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-clock-history display-4 d-block mb-2 opacity-50"></i>
+                    <p>Belum ada riwayat reservasi.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+
+    </div>
 </div>
 @endsection

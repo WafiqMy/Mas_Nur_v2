@@ -12,6 +12,8 @@
     $gambar = $event['gambar_event'] ?? '';
     if ($gambar && !str_starts_with($gambar, 'http')) {
         $gambar = $BASE_IMG . '/uploads/kegiatan/' . $gambar;
+    } elseif ($gambar && str_starts_with($gambar, 'http') && !str_contains($gambar, '/uploads/')) {
+        $gambar = $BASE_IMG . '/uploads/kegiatan/' . basename($gambar);
     }
 
     // Parse dokumentasi (bisa JSON array atau comma-separated string)
@@ -29,7 +31,9 @@
     }
     // Buat URL lengkap untuk dokumentasi
     $dokUrls = array_map(function($f) use ($BASE_IMG) {
-        if (str_starts_with($f, 'http')) return $f;
+        if (!$f) return null;
+        if (str_starts_with($f, 'http') && str_contains($f, '/uploads/')) return $f;
+        if (str_starts_with($f, 'http')) return $BASE_IMG . '/uploads/kegiatan/' . basename($f);
         return $BASE_IMG . '/uploads/kegiatan/' . $f;
     }, $dokList);
 
